@@ -1,0 +1,21 @@
+kind: Job
+apiVersion: batch/v1
+metadata:
+  name: hisup-inference-test
+spec:
+  template:
+    spec:
+      containers:
+      - name: hisup-inference-test
+        image: "csalomonsen/hisup-springfield:0.2-release"
+        workingDir: ./data
+        command: ["sh", "hisup-demo.sh"]
+        volumeMounts:
+        - name: datasets
+          mountPath: ./data
+      volumes:
+      - name: datasets
+        persistentVolumeClaim:
+          claimName: datasets
+      restartPolicy: OnFailure
+  backoffLimit: 0
