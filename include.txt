@@ -4,3 +4,4 @@ scripts/
 tools/
 init.sh
 hisup-demo.sh
+000000000027.jpg

@@ -14,10 +14,8 @@ conda run -n hisup pip install -r requirements.txt
 # Should really point to /usr/local/cuda, however nvcc cuda compiler is not found during build afterwards.
 export CUDA_HOME=/opt/conda/envs/hisup
 
-cd /storage/experiment/hisup/csrc/lib
-
 # conda run -n hisup make ### Instead of make just copy its contents
-cd /storage/experiment/hisup/csrc/lib/afm_op; python setup.py build_ext --inplace; rm -rf build
-cd /storage/experiment/hisup/csrc/lib/squeeze; python setup.py build_ext --inplace; rm -rf build
+cd /storage/experiments/hisup/hisup/csrc/lib/afm_op; python setup.py build_ext --inplace; rm -rf build
+cd /storage/experiments/hisup/hisup/csrc/lib/squeeze; python setup.py build_ext --inplace; rm -rf build
 
-cd /storage/experiment
+cd /storage/experiments
