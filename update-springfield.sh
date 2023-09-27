@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rsync -avzh hisup-demo.sh springfield:~/experiments/hisup
+rsync -avzh init.sh springfield:~/experiments/hisup
