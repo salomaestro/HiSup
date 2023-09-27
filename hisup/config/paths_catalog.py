@@ -40,12 +40,12 @@ class DatasetCatalog(object):
         attrs = DatasetCatalog.DATASETS[name]
 
         args = dict(
-            root = osp.join(data_dir,attrs['img_dir']),
-            ann_file = osp.join(data_dir,attrs['ann_file'])
+            root=osp.join(data_dir, attrs['img_dir']),
+            ann_file=osp.join(data_dir, attrs['ann_file'])
         )
 
         if 'train' in name:
-            return dict(factory="TrainDataset",args=args)
+            return dict(factory="TrainDataset", args=args)
         if 'test' in name and 'ann_file' in attrs:
             return dict(factory="TestDatasetWithAnnotations",
                         args=args)
