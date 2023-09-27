@@ -15,7 +15,7 @@ conda run -n hisup pip install -r requirements.txt
 export CUDA_HOME=/opt/conda/envs/hisup
 
 # conda run -n hisup make ### Instead of make just copy its contents
-cd /storage/experiments/hisup/hisup/csrc/lib/afm_op; python setup.py build_ext --inplace; rm -rf build
-cd /storage/experiments/hisup/hisup/csrc/lib/squeeze; python setup.py build_ext --inplace; rm -rf build
+cd /storage/experiments/hisup/hisup/csrc/lib/afm_op; conda run -n hisup python setup.py build_ext --inplace; rm -rf build
+cd /storage/experiments/hisup/hisup/csrc/lib/squeeze; conda run -n hisup python setup.py build_ext --inplace; rm -rf build
 
 cd /storage/experiments
