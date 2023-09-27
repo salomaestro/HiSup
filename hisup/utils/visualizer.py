@@ -36,10 +36,13 @@ def show_polygons(image, polys):
     for i, polygon in enumerate(polys):
         color = colormap[i % num_color]
         plt.gca().add_patch(Patches.Polygon(polygon, fill=False, ec=color, linewidth=1.5))
-        plt.fill(polygon[:,0], polygon[:, 1], color=color, alpha=0.3)
-        plt.plot(polygon[:,0], polygon[:,1], color=color, marker='.')
-    
-    plt.show()
+        plt.fill(polygon[:, 0], polygon[:, 1], color=color, alpha=0.3)
+        plt.plot(polygon[:, 0], polygon[:, 1], color=color, marker='.')
+
+    plt.savefig("/storage/experiments/hisup/output.png")
+    plt.clf()
+    # plt.show()
+
 
 def save_viz(image, polys, save_path, filename):
     plt.axis('off')
