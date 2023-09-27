@@ -1,28 +1,23 @@
-#!/bin/sh
+#!/usr/bin/env bash -l
 
-# Conda requirements install script
-# wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
-#
-# bash ~/miniconda.sh -b -p /opt/conda
-#
-# ls /opt/conda
-
-# export PATH="/root/miniconda/bin:${PATH}"
-#
 conda update conda
 conda create -n hisup python=3.7
 
 conda init bash
-conda activate hisup
 
-conda install pytorch=1.7.0 torchvision=0.8.0 cudatoolkit=11.0 -c pytorch
-conda install pycocotools=2.0.4 -c conda-forge
+conda run -n hisup conda install pytorch=1.7.0 torchvision=0.8.0 cudatoolkit=11.0 -c pytorch
+conda run -n hisup conda install pycocotools=2.0.4 cudatoolkit-dev=11.7 -c conda-forge
 
-conda develop .
-pip install -r requirements.txt
+conda run -n hisup conda develop .
+conda run -n hisup pip install -r requirements.txt
 
-cd /experiment/hisup/csrc/lib
-make
+# Should really point to /usr/local/cuda, however nvcc cuda compiler is not found during build afterwards.
+export CUDA_HOME=/opt/conda/envs/hisup
 
-cd /experiment
-# export PATH="/root/miniconda/envs/hisup/bin:${PATH}"
+cd /storage/experiment/hisup/csrc/lib
+
+# conda run -n hisup make ### Instead of make just copy its contents
+cd /storage/experiment/hisup/csrc/lib/afm_op; python setup.py build_ext --inplace; rm -rf build
+cd /storage/experiment/hisup/csrc/lib/squeeze; python setup.py build_ext --inplace; rm -rf build
+
+cd /storage/experiment

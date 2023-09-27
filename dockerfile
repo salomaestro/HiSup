@@ -1,13 +1,12 @@
 FROM pytorch/pytorch:1.7.1-cuda11.0-cudnn8-runtime
 MAINTAINER csalomonsen <christian.salomonsen@uit.no>
 
-WORKDIR /experiment
-COPY ./ ./
+WORKDIR /storage/experiments/hisup
 
 ENV CONDA_ALWAYS_YES="true"
 
 # Install dependencies https://saturncloud.io/blog/how-to-install-packages-with-miniconda-in-dockerfile-a-guide-for-data-scientists/
-RUN apt-get update && apt-get install -y wget gcc make && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y wget gcc make git && rm -rf /var/lib/apt/lists/*
 RUN apt-get update && apt-get install --reinstall build-essential -y
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 
