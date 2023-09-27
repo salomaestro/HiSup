@@ -1,11 +1,13 @@
 import os
 import os.path as osp
 
+
 class DatasetCatalog(object):
 
-    DATA_DIR = osp.abspath(osp.join(osp.dirname(__file__),
-                '..','..','data'))
-    
+    # DATA_DIR = osp.abspath(osp.join(osp.dirname(__file__),
+    #             '..','..','data'))
+    DATA_DIR = osp.abspath("/storage/datasets")
+
     DATASETS = {
         'crowdai_train_small': {
             'img_dir': 'crowdai/train/images',
