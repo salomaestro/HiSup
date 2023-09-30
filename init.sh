@@ -1,21 +1,30 @@
-#!/usr/bin/env bash -l
+#!/usr/bin/env bash
 
-conda update conda
-conda create -n hisup python=3.7
+# conda create -n hisup --file /storage/experiments/hisup/conda_requirements.txt
+conda env create --file /storage/experiments/hisup/environment.yaml
 
-conda init bash
+echo "=========================== ENV CREATED ==========================="
 
-conda run -n hisup conda install pytorch=1.7.0 torchvision=0.8.0 cudatoolkit=11.0 -c pytorch
-conda run -n hisup conda install pycocotools=2.0.4 cudatoolkit-dev=11.7 -c conda-forge
+which conda
 
-conda run -n hisup conda develop .
-conda run -n hisup pip install -r requirements.txt
-
-# Should really point to /usr/local/cuda, however nvcc cuda compiler is not found during build afterwards.
+# export CUDA_HOME=/opt/conda/envs/hisup/pkgs/cuda-toolkit
 export CUDA_HOME=/opt/conda/envs/hisup
+
+# Add hisup bin to PATH
+export PATH=/storage/experiments/hisup/hisup/bin:$PATH
+
+echo $PATH
+
+echo "TEST CUDA HOME: $CUDA_HOME"
+ls $CUDA_HOME
+
+echo "=========================== CONTINUING BUILD ==========================="
 
 # conda run -n hisup make ### Instead of make just copy its contents
 cd /storage/experiments/hisup/hisup/csrc/lib/afm_op; conda run -n hisup python setup.py build_ext --inplace; rm -rf build
+echo "=========================== AFM_OP DONE ==========================="
 cd /storage/experiments/hisup/hisup/csrc/lib/squeeze; conda run -n hisup python setup.py build_ext --inplace; rm -rf build
+
+echo "=========================== SQUEEZE DONE ==========================="
 
 cd /storage/experiments

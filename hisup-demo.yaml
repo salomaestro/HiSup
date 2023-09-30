@@ -8,7 +8,8 @@ spec:
       containers:
       - name: hisup-train
         image: "csalomonsen/hisup-springfield:0.3-dev"
-        command: ["sh", "init.sh"]
+        # command: ["sh", "-c", "/storage/experiments/hisup/init.sh"]
+        command: ["sh", "-c", "/storage/experiments/hisup/init.sh", "/storage/experiments/hisup/hisup-demo.sh"]
         volumeMounts:
         - name: storage
           mountPath: /storage
