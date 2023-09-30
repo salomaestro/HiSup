@@ -1,3 +1,3 @@
 #!/bin/bash
 
-rsync -avzhr --files-from=include.txt . springfield:~/experiments/hisup
+rsync -avzhr --files-from=include.txt . springfield:~/experiments/hisup --delete
