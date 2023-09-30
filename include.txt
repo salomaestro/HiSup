@@ -4,4 +4,5 @@ scripts/
 tools/
 init.sh
 hisup-demo.sh
+build-env.sh
 000000000027.jpg
