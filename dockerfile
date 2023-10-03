@@ -24,6 +24,8 @@ ENV CUDA_HOME=/opt/conda/envs/hisup
 
 RUN conda run -n hisup conda develop .
 
+RUN echo "source activate hisup" >> ~/.bashrc
+
 # WORKDIR /storage/experiments/hisup/hisup/csrc/lib/afm_op
 # RUN python setup.py build_ext --inplace
 # RUN rm -rf build
@@ -33,5 +35,4 @@ RUN conda run -n hisup conda develop .
 # RUN rm -rf build
 #
 # WORKDIR /storage/experiment/hisup
-# RUN echo "source activate hisup" >> ~/.bashrc
 # ENV PATH="/opt/conda/envs/hisup/bin:${PATH}"
