@@ -3,6 +3,8 @@ MAINTAINER csalomonsen <christian.salomonsen@uit.no>
 
 WORKDIR /storage/experiments/hisup
 
+COPY . .
+
 ENV CONDA_ALWAYS_YES="true"
 
 # Install dependencies https://saturncloud.io/blog/how-to-install-packages-with-miniconda-in-dockerfile-a-guide-for-data-scientists/
@@ -16,16 +18,20 @@ RUN conda env create --file /storage/experiments/hisup/environment.yaml
 
 RUN conda init bash
 
+SHELL ["conda", "run", "-n", "hisup", "/bin/bash", "-c"]
+
+ENV CUDA_HOME=/opt/conda/envs/hisup
+
 RUN conda run -n hisup conda develop .
 
-WORKDIR /storage/experiments/hisup/hisup/csrc/lib/afm_op
-RUN conda run -n hisup python setup.py build_ext --inplace
-RUN rm -rf build
-
-WORKDIR /storage/experiments/hisup/hisup/csrc/lib/squeeze
-RUN conda run -n hisup python setup.py build_ext --inplace
-RUN rm -rf build
-
-WORKDIR /storage/experiment/hisup
-RUN echo "source activate hisup" >> ~/.bashrc
-ENV PATH="/opt/conda/envs/hisup/bin:${PATH}"
+# WORKDIR /storage/experiments/hisup/hisup/csrc/lib/afm_op
+# RUN python setup.py build_ext --inplace
+# RUN rm -rf build
+#
+# WORKDIR /storage/experiments/hisup/hisup/csrc/lib/squeeze
+# RUN python setup.py build_ext --inplace
+# RUN rm -rf build
+#
+# WORKDIR /storage/experiment/hisup
+# RUN echo "source activate hisup" >> ~/.bashrc
+# ENV PATH="/opt/conda/envs/hisup/bin:${PATH}"
