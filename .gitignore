@@ -1,6 +1,7 @@
 .history/
 __pycache__/
 
+boundary-iou-api/
 build/*
 outputs/*
 .vscode/*
