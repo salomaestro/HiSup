@@ -1,8 +1,6 @@
 .history/
 __pycache__/
 
-boundary-iou-api/
-config-files/crowdai-small_hrnet48.yaml
 build/*
 outputs/*
 .vscode/*
