@@ -25,30 +25,28 @@ def init():
             log.error(f"{path} does not exist")
             raise Exception(f"{path} does not exist")
 
-    send_notification("Starting build...")
+    success = False
+    i = 1
+    while not success:
+        try:
+            env_run = run(
+                f'conda env create --file {str(conda_env)}', shell=True)
 
-    # success = False
-    # i = 1
-    # while not success:
-    #     try:
-    #         env_run = run(
-    #             f'conda env create --file {str(conda_env)}', shell=True)
-    #
-    #         if env_run.returncode != 0:
-    #             raise Exception("Environment creation failed")
-    #
-    #         success = True
-    #     except Exception as e:
-    #         log.error(e)
-    #         log.info("Retrying... ({})".format(i))
-    #         i += 1
-    #         if i > 3:
-    #             log.error("Environment creation failed")
-    #             send_notification("Environment creation failed")
-    #             raise e
-    #
-    # log.info("Environment created, building afm and squeeze...")
-    # send_notification("Environment created, building afm and squeeze...")
+            if env_run.returncode != 0:
+                raise Exception("Environment creation failed")
+
+            success = True
+        except Exception as e:
+            log.error(e)
+            log.info("Retrying... ({})".format(i))
+            i += 1
+            if i > 3:
+                log.error("Environment creation failed")
+                send_notification("Environment creation failed")
+                raise e
+
+    log.info("Environment created, building afm and squeeze...")
+    send_notification("Environment created, building afm and squeeze...")
 
     try:
         set_cuda = run("export CUDA_HOME=/opt/conda/envs/hisup", shell=True)
@@ -60,14 +58,14 @@ def init():
         log.info("CUDA_HOME set successfully")
 
         afm_build = run(
-            "conda run -n hisup python3 setup.py build_ext --inplace", cwd=afm)
+            "python3 setup.py build_ext --inplace; rm -rf build", cwd=afm)
         afm_build_rm = run("rm -rf build", cwd=afm)
 
         if afm_build.returncode != 0 or afm_build_rm.returncode != 0:
             log.error("AFM build failed, trying to build squeeze only...")
 
         squeeze_build = run(
-            "conda run -n hisup python3 setup.py build_ext --inplace", cwd=squeeze)
+            "python3 setup.py build_ext --inplace", cwd=squeeze)
         squeeze_build_rm = run("rm -rf build", cwd=squeeze)
 
         if squeeze_build.returncode != 0 or squeeze_build_rm.returncode != 0:

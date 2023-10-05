@@ -7,7 +7,7 @@ spec:
     spec:
       containers:
       - name: hisup-train
-        image: "csalomonsen/hisup-springfield:0.3-large"
+        image: "csalomonsen/hisup-springfield:0.3-dev"
         command: ["python3", "/storage/experiments/hisup/run-demo.py"]
         volumeMounts:
         - name: storage
