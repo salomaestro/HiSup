@@ -2,10 +2,6 @@ config-files/
 hisup/
 scripts/
 tools/
-environment.yaml
-init.sh
-init.py
-hisup-demo.sh
-build-env.sh
-run-demo.py
-000000000027.jpg
+run-demo.sh
+demo-image.jpg
+requirements.txt
