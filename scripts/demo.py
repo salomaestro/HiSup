@@ -1,14 +1,18 @@
+import sys
+from skimage import io
 import torch
 import argparse
 import numpy as np
+import os
 
-from skimage import io
+sys.path.append("/storage/experiments/hisup")
+
+from pathlib import Path
 from hisup.config import cfg
-from hisup.detector import get_pretrained_model
-from hisup.dataset.build import build_transform
-from hisup.utils.comm import to_single_device
 from hisup.utils.visualizer import show_polygons
-
+from hisup.utils.comm import to_single_device
+from hisup.dataset.build import build_transform
+from hisup.detector import get_pretrained_model
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Testing')
