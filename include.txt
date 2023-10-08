@@ -1,7 +1,0 @@
-config-files/
-hisup/
-scripts/
-tools/
-run-demo.sh
-demo-image.jpg
-requirements.txt
