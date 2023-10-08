@@ -1,14 +1,18 @@
 kind: Job
 apiVersion: batch/v1
 metadata:
-  name: hisup-train
+  name: hisup-simple
 spec:
   template:
     spec:
       containers:
-      - name: hisup-train
-        image: "csalomonsen/hisup-springfield:0.3-dev"
-        command: ["python3", "/storage/experiments/hisup/run-demo.py"]
+      - name: hisup-simple
+        image: "pytorch/pytorch:2.0.1-cuda11.7-cudnn8-devel"
+        command: ["sh", "/storage/experiments/hisup/run-simple.sh"]
+        workingDir: /storage/experiments/hisup
+        resources:
+          limits:
+            nvidia.com/gpu: 1
         volumeMounts:
         - name: storage
           mountPath: /storage
@@ -17,4 +21,6 @@ spec:
         persistentVolumeClaim:
           claimName: storage
       restartPolicy: OnFailure
+      imagePullSecrets:
+        - name: regcred
   backoffLimit: 0
