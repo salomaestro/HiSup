@@ -18,5 +18,6 @@ RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 
 RUN pip install --no-cache-dir --default-timeout=100 -r requirements.txt
 RUN pip install git+https://github.com/bowenc0221/boundary-iou-api.git
+RUN pip install wandb
 
 ENTRYPOINT ["/home/docker-entrypoint.sh"]
