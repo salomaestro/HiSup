@@ -68,6 +68,17 @@ class MetricLogger(object):
             )
         return self.delimiter.join(loss_str)
 
+    def to_dict(self):
+        loss_dict = {}
+        keys = sorted(self.meters)
+        for name in keys:
+            meter = self.meters[name]
+            name_global_avg = name + '_global_avg'
+            name_median = name + '_median'
+            loss_dict[name_median] = meter.median
+            loss_dict[name_global_avg] = meter.global_avg
+        return loss_dict
+
     def tensorborad(self, iteration, writter, phase='train'):
         for name, meter in self.meters.items():
             if 'loss' in name:
