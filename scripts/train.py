@@ -1,3 +1,4 @@
+import sys
 import os
 import time
 import argparse
@@ -5,6 +6,8 @@ import logging
 import random
 import numpy as np
 import datetime
+
+sys.path.append("/storage/experiments/hisup")
 
 from hisup.config import cfg
 from hisup.detector import BuildingDetector
