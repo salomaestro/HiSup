@@ -93,9 +93,9 @@ class TrainDataset(Dataset):
         # load image
         image = io.imread(osp.join(self.root, file_name)).astype(float)[:, :, :3]
         for key, _type in (['junctions', np.float32],
-                           ['edges_positive', np.long],
-                           ['juncs_tag', np.long],
-                           ['juncs_index', np.long],
+                           ['edges_positive', np.longlong],
+                           ['juncs_tag', np.longlong],
+                           ['juncs_index', np.longlong],
                            ['bbox', np.float32],
                            ):
             ann[key] = np.array(ann[key], dtype=_type)
