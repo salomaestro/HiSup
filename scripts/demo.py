@@ -7,7 +7,6 @@ import os
 
 sys.path.append("/storage/experiments/hisup")
 
-from pathlib import Path
 from hisup.config import cfg
 from hisup.utils.visualizer import show_polygons
 from hisup.utils.comm import to_single_device
