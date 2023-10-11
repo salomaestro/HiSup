@@ -80,12 +80,13 @@ def generate_coco_mask(mask, img_id):
 
 
 class TestPipeline():
-    def __init__(self, cfg, eval_type='coco_iou'):
+    def __init__(self, cfg, eval_type='coco_iou', wandb_logger=None):
         self.cfg = cfg
         self.device = cfg.MODEL.DEVICE
         self.output_dir = cfg.OUTPUT_DIR
         self.dataset_name = cfg.DATASETS.TEST[0]
         self.eval_type = eval_type
+        self.wandb_logger = wandb_logger
         
         self.gt_file = ''
         self.dt_file = ''
@@ -138,6 +139,26 @@ class TestPipeline():
                 image_masks = generate_coco_mask(mask_pred, img_id)
                 if len(image_masks) != 0:
                     mask_results.extend(image_masks)
+
+
+            if self.wandb_logger:
+                self.wandb_logger({
+                    "test": {
+                        "image": images[0],
+                        "gt": annotations[0],
+                        "image_scores": {
+                            str(poly_nr): score for poly_nr, score in zip(range(len(batch_scores[0])), batch_scores[0])
+                        },
+                        "image_polygon": batch_polygons[0],
+                        "image_mask": batch_masks[0],
+                        "batch_score_mean": np.mean([s for s in img_scores for img_scores in batch_scores]),
+                        "iter" : i,
+                        }
+                    })
+
+
+
+
         
         dt_file = osp.join(self.output_dir,'{}.json'.format(dataset_name))
         logger.info('Writing the results of the {} dataset into {}'.format(dataset_name,
