@@ -54,7 +54,7 @@ def test(cfg, args):
         _ = checkpointer.load()        
         model = model.eval()
 
-    test_pipeline = TestPipeline(cfg, args.eval_type)
+    test_pipeline = TestPipeline(cfg, args.eval_type, wandb.log)
     test_pipeline.test(model)
     # test_pipeline.eval()
 
