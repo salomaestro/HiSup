@@ -1,3 +1,4 @@
+import sys
 import torch
 import random
 import numpy as np
@@ -7,6 +8,9 @@ import datetime
 import argparse
 import logging
 import torch.nn as nn
+import wandb
+
+sys.path.append("/storage/experiments/hisup")
 
 from hisup.detector import BuildingDetector
 from hisup.config import cfg
@@ -106,6 +110,20 @@ def train(cfg):
 
     global_iteration = epoch_size * start_epoch
 
+    wandb.init(
+        project='hisup',
+        config={
+            "model": cfg.MODEL.NAME,
+            "dataset": cfg.DATASETS.TRAIN[0],
+            "max_epoch": max_epoch,
+            "batch_size": cfg.SOLVER.IMS_PER_BATCH,
+            "lr": cfg.SOLVER.BASE_LR,
+            "weight_decay": cfg.SOLVER.WEIGHT_DECAY,
+            "loss_weights": cfg.MODEL.LOSS_WEIGHTS,
+            "optimizer": cfg.SOLVER.OPTIMIZER,
+        },
+    )
+
     for epoch in range(start_epoch + 1, arguments['max_epoch'] + 1):
         meters = MetricLogger(" ")
         model.train()
@@ -158,6 +176,16 @@ def train(cfg):
                             memory=torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
                         )
                     )
+                    wandb.log({
+                        "train": {
+                            "eta": eta_string,
+                            "epoch": epoch,
+                            "iter": it,
+                            "lr": optimizer.param_groups[0]["lr"],
+                            **meters.to_dict(),
+                            "max mem": torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
+                        }
+                    })
 
         if local_rank == 0:
             checkpointer.save('model_{:05d}'.format(epoch))
@@ -172,6 +200,8 @@ def train(cfg):
         )
     )
 
+    wandb.run.summary["total_training_time"] = total_training_time
+    wandb.run.summary["avg_time_per_epoch"] = total_training_time / (max_epoch)
 
 if __name__ == "__main__":
 
