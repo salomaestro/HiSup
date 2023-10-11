@@ -171,16 +171,16 @@ def train(cfg):
                         memory=torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
                     )
                 )
-                wandb.log(
-                        {
-                            "eta": eta_string,
-                            "epoch": epoch,
-                            "iter": it,
-                            "lr": optimizer.param_groups[0]["lr"],
-                            **meters.to_dict(),
-                            "max mem": torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
-                            }
-                        )
+                wandb.log({
+                    "train": {
+                        "eta": eta_string,
+                        "epoch": epoch,
+                        "iter": it,
+                        "lr": optimizer.param_groups[0]["lr"],
+                        **meters.to_dict(),
+                        "max mem": torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
+                    }
+                })
         
         checkpointer.save('model_{:05d}'.format(epoch))
         scheduler.step()
