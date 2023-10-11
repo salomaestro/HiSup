@@ -72,8 +72,8 @@ class TestDatasetWithAnnotations(dset.coco.CocoDetection):
         ann['mask'] = np.clip(seg_mask, 0, 1)
         
         for key,_type in (['junctions',np.float32],
-                          ['juncs_tag',np.long],
-                          ['juncs_index', np.long],
+                          ['juncs_tag',np.longlong],
+                          ['juncs_index', np.longlong],
                           ['bbox', np.float32]):
             ann[key] = np.array(ann[key],dtype=_type)
 
