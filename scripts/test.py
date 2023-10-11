@@ -1,6 +1,10 @@
+import sys
 import os
 import argparse
 import logging
+import wandb
+
+sys.path.append("/storage/experiments/hisup")
 
 from hisup.config import cfg
 from hisup.detector import BuildingDetector
@@ -44,6 +48,14 @@ def test(cfg, args):
     device = cfg.MODEL.DEVICE
     model = BuildingDetector(cfg, test=True)
     model = model.to(device)
+
+    wandb.init(
+        project="hisup",
+        config={
+            "model": cfg.MODEL.NAME,
+            "dataset": cfg.DATASETS.TRAIN[0],
+            }
+        )
 
     if args.config_file is not None:
         checkpointer = DetectronCheckpointer(cfg,
