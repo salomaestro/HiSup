@@ -108,7 +108,6 @@ def train(cfg):
 
     wandb.init(
             project='hisup',
-            dataset="crowdai",
             config={
                 "model": cfg.MODEL.NAME,
                 "dataset": cfg.DATASETS.TRAIN[0],
