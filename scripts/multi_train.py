@@ -112,6 +112,7 @@ def train(cfg):
 
     wandb.init(
         project='hisup',
+        group="Distributed Training",
         config={
             "model": cfg.MODEL.NAME,
             "dataset": cfg.DATASETS.TRAIN[0],
@@ -178,7 +179,6 @@ def train(cfg):
                     )
                     wandb.log({
                         "train": {
-                            "eta": eta_string,
                             "epoch": epoch,
                             "iter": it,
                             "lr": optimizer.param_groups[0]["lr"],
@@ -264,3 +264,4 @@ if __name__ == "__main__":
     save_config(cfg, output_config_path)
     set_random_seed(args.seed)
     train(cfg)
+    wandb.finish()
