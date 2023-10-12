@@ -144,14 +144,10 @@ class TestPipeline():
             if self.wandb_logger:
                 self.wandb_logger({
                     "test": {
-                        "image": images[0],
-                        "gt": annotations[0],
                         "image_scores": {
                             str(poly_nr): score for poly_nr, score in zip(range(len(batch_scores[0])), batch_scores[0])
                         },
-                        "image_polygon": batch_polygons[0],
-                        "image_mask": batch_masks[0],
-                        "batch_score_mean": np.mean([s for s in img_scores for img_scores in batch_scores]),
+                        "batch_score_mean": np.mean([s for img_scores in batch_scores for s in img_scores]),
                         "iter" : i,
                         }
                     })
