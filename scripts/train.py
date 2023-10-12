@@ -173,7 +173,6 @@ def train(cfg):
                 )
                 wandb.log({
                     "train": {
-                        "eta": eta_string,
                         "epoch": epoch,
                         "iter": it,
                         "lr": optimizer.param_groups[0]["lr"],
