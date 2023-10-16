@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:1.7.1-cuda11.0-cudnn8-devel
+FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-devel
 MAINTAINER csalomonsen <christian.salomonsen@uit.no>
 
 WORKDIR /storage/experiments/hisup
