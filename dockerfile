@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-devel
+FROM pytorch/pytorch:1.8.0-cuda11.1-cudnn8-devel
 MAINTAINER csalomonsen <christian.salomonsen@uit.no>
 
 WORKDIR /storage/experiments/hisup
@@ -16,7 +16,6 @@ RUN apt-get update && apt-get install -y wget curl gcc make git && rm -rf /var/l
 RUN apt-get update && apt-get install --reinstall build-essential -y
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 
-RUN conda install pytorch torchvision pytorch-cuda=11.7 -c pytorch -c nvidia
 RUN pip install --no-cache-dir --default-timeout=100 -r requirements.txt
 RUN pip install git+https://github.com/bowenc0221/boundary-iou-api.git
 RUN pip install wandb
