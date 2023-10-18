@@ -1,4 +1,4 @@
-FROM pytorch/pytorch:1.8.0-cuda11.1-cudnn8-devel
+FROM pytorch/pytorch:1.13.1-cuda11.6-cudnn8-devel
 MAINTAINER csalomonsen <christian.salomonsen@uit.no>
 
 WORKDIR /storage/experiments/hisup
@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install --reinstall build-essential -y
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 
 RUN pip install --no-cache-dir --default-timeout=100 -r requirements.txt
-RUN pip install git+https://github.com/bowenc0221/boundary-iou-api.git
-RUN pip install wandb
+RUN git clone https://github.com/bowenc0221/boundary-iou-api.git
+RUN pip install -e boundary-iou-api
 
 ENTRYPOINT ["/home/docker-entrypoint.sh"]

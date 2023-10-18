@@ -10,3 +10,4 @@ multiprocess
 descartes
 imagecodecs
 pycocotools
+wandb
