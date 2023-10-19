@@ -12,7 +12,7 @@ from argparse import ArgumentParser
 PREDICTION_COLOR = [0, 1, 0]
 GROUND_TRUTH_COLOR = [1, 0, 1]
 
-def display_annotations(annotations, colors, ax):
+def generate_annotations(annotations, colors, ax):
     polygons = []
 
     for ann in annotations:
@@ -33,11 +33,14 @@ def load_prediction(path):
     with open(path) as f:
         return json.load(f)
 
-def main(gt_annotations_path, pred_annotations_path, image_dir, image_id):
+def create_index(gt_annotations_path, pred_annotations_path):
     gt = COCO(gt_annotations_path)
     pred = load_prediction(pred_annotations_path)
     results = gt.loadRes(pred)
 
+    return gt, results
+
+def display_annotations(gt, results, image_dir, image_id):
     if image_id is None:
         image_id = random.choice(gt.getImgIds())
 
@@ -63,11 +66,21 @@ def main(gt_annotations_path, pred_annotations_path, image_dir, image_id):
     ax.set_axis_off()
     ax.imshow(image)
 
-    display_annotations(gt_annotations, GROUND_TRUTH_COLOR, ax)
-    display_annotations(pred_annotations, PREDICTION_COLOR, ax)
+    generate_annotations(gt_annotations, GROUND_TRUTH_COLOR, ax)
+    generate_annotations(pred_annotations, PREDICTION_COLOR, ax)
     plt.tight_layout()
 
-    plt.show()
+def main(gt_annotations_path, pred_annotations_path, image_dir, image_id, num_images):
+    gt, results = create_index(gt_annotations_path, pred_annotations_path)
+
+    if image_id is not None:
+        display_annotations(gt, results, image_dir, image_id)
+        plt.show()
+        return
+
+    for i in range(num_images):
+        display_annotations(gt, results, image_dir, None)
+        plt.show()
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -75,7 +88,14 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--pred_annotations_path", type=Path, required=True)
     parser.add_argument("-i", "--image_dir", type=Path, required=True)
     parser.add_argument("--image_id", type=int, required=False)
+    parser.add_argument("--num_images", type=int, required=False, default=1)
 
     args = parser.parse_args()
 
-    main(args.gt_annotations_path, args.pred_annotations_path, args.image_dir, args.image_id)
+    main(
+        args.gt_annotations_path,
+        args.pred_annotations_path,
+        args.image_dir,
+        args.image_id,
+        args.num_images
+    )
