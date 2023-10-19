@@ -110,20 +110,22 @@ def train(cfg):
 
     global_iteration = epoch_size * start_epoch
 
-    wandb.init(
-        project='hisup',
-        group="Distributed Training",
-        config={
-            "model": cfg.MODEL.NAME,
-            "dataset": cfg.DATASETS.TRAIN[0],
-            "max_epoch": max_epoch,
-            "batch_size": cfg.SOLVER.IMS_PER_BATCH,
-            "lr": cfg.SOLVER.BASE_LR,
-            "weight_decay": cfg.SOLVER.WEIGHT_DECAY,
-            "loss_weights": cfg.MODEL.LOSS_WEIGHTS,
-            "optimizer": cfg.SOLVER.OPTIMIZER,
-        },
-    )
+    if local_rank == 0:
+        wandb.init(
+            project='hisup-multi',
+            group="crowdai_hrnet48",
+            job_type="train",
+            config={
+                "model": cfg.MODEL.NAME,
+                "dataset": cfg.DATASETS.TRAIN[0],
+                "max_epoch": max_epoch,
+                "batch_size": cfg.SOLVER.IMS_PER_BATCH,
+                "lr": cfg.SOLVER.BASE_LR,
+                "weight_decay": cfg.SOLVER.WEIGHT_DECAY,
+                "loss_weights": cfg.MODEL.LOSS_WEIGHTS,
+                "optimizer": cfg.SOLVER.OPTIMIZER,
+            },
+        )
 
     for epoch in range(start_epoch + 1, arguments['max_epoch'] + 1):
         meters = MetricLogger(" ")
@@ -202,6 +204,7 @@ def train(cfg):
         )
     )
 
+    if local_rank == 0:
     wandb.run.summary["total_training_time"] = total_training_time
     wandb.run.summary["avg_time_per_epoch"] = total_training_time / (max_epoch)
 
