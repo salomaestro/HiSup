@@ -181,6 +181,8 @@ def train(cfg):
                         "train": {
                             "epoch": epoch,
                             "iter": it,
+                            "images-per-second": images.shape[0] / batch_time,
+                            "image-iter": it * images.shape[0],
                             "lr": optimizer.param_groups[0]["lr"],
                             **meters.to_dict(),
                             "max mem": torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
