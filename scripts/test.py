@@ -51,6 +51,7 @@ def test(cfg, args):
 
     wandb.init(
         project="hisup",
+        group="test",
         config={
             "model": cfg.MODEL.NAME,
             "dataset": cfg.DATASETS.TRAIN[0],
