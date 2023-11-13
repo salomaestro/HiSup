@@ -1,35 +1,37 @@
-import sys
-import torch
-import random
-import numpy as np
-import os
-import time
-import datetime
 import argparse
+import datetime
 import logging
+import os
+import random
+import sys
+import time
+
+import numpy as np
+import torch
 import torch.nn as nn
 import wandb
 
 sys.path.append("/storage/experiments/hisup")
 
-from hisup.detector import BuildingDetector
+from torch.utils.data.distributed import DistributedSampler
+
 from hisup.config import cfg
-from hisup.utils.comm import to_device
 from hisup.dataset import build_train_dataset_multi
+from hisup.dataset.train_dataset import collate_fn
+from hisup.detector import BuildingDetector
 from hisup.solver import make_lr_scheduler, make_optimizer
+from hisup.utils.checkpoint import DetectronCheckpointer
+from hisup.utils.comm import to_device
 from hisup.utils.logger import setup_logger
 from hisup.utils.metric_logger import MetricLogger
 from hisup.utils.miscellaneous import save_config
-from hisup.utils.checkpoint import DetectronCheckpointer
-from torch.utils.data.distributed import DistributedSampler
-from hisup.dataset.train_dataset import collate_fn
 
 torch.distributed.init_process_group(backend="nccl")
 local_rank = torch.distributed.get_rank()
 torch.cuda.set_device(local_rank)
 device = torch.device("cuda", local_rank)
 
-sharing_strategy = 'file_system'
+sharing_strategy = "file_system"
 torch.multiprocessing.set_sharing_strategy(sharing_strategy)
 
 
@@ -38,15 +40,17 @@ class LossReducer(object):
         self.loss_weights = dict(cfg.MODEL.LOSS_WEIGHTS)
 
     def __call__(self, loss_dict):
-        total_loss = sum([self.loss_weights[k] * loss_dict[k]
-                          for k in self.loss_weights.keys()])
+        total_loss = sum(
+            [self.loss_weights[k] * loss_dict[k] for k in self.loss_weights.keys()]
+        )
 
         return total_loss
+
 
 def set_random_seed(seed, deterministic=False):
     random.seed(seed)
     np.random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
@@ -55,46 +59,45 @@ def set_random_seed(seed, deterministic=False):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
+
 def train(cfg):
     logger = logging.getLogger("trainer")
     device = cfg.MODEL.DEVICE
     model = BuildingDetector(cfg)
     model = model.to(device)
-    model = nn.parallel.DistributedDataParallel(model,
-                                                device_ids=[args.local_rank],
-                                                output_device=args.local_rank,
-                                                find_unused_parameters=True)
+    model = nn.parallel.DistributedDataParallel(
+        model,
+        device_ids=[args.local_rank],
+        output_device=args.local_rank,
+        find_unused_parameters=True,
+    )
 
     train_dataset = build_train_dataset_multi(cfg)
-    train_sampler = DistributedSampler(train_dataset,
-                                       rank=local_rank)
-    train_loader = torch.utils.data.DataLoader(train_dataset,
-                                               batch_size=cfg.SOLVER.IMS_PER_BATCH,
-                                               collate_fn=collate_fn,
-                                               num_workers=cfg.DATALOADER.NUM_WORKERS,
-                                               sampler=train_sampler,
-                                               )
+    train_sampler = DistributedSampler(train_dataset, rank=local_rank)
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size=cfg.SOLVER.IMS_PER_BATCH,
+        collate_fn=collate_fn,
+        num_workers=cfg.DATALOADER.NUM_WORKERS,
+        sampler=train_sampler,
+    )
 
     optimizer = make_optimizer(cfg, model)
-    scheduler = make_lr_scheduler(cfg, optimizer)
 
     loss_reducer = LossReducer(cfg)
-    if args.model == 'last':
+    if args.model == "last":
         save_dir = cfg.OUTPUT_DIR
     else:
-        save_dir = os.path.join(args.model.split('/')[0], args.model.split('/')[1])
+        save_dir = os.path.join(args.model.split("/")[0], args.model.split("/")[1])
 
     arguments = {}
     arguments["epoch"] = 0
     max_epoch = cfg.SOLVER.MAX_EPOCH
     arguments["max_epoch"] = max_epoch
 
-    checkpointer = DetectronCheckpointer(cfg,
-                                         model,
-                                         optimizer,
-                                         save_dir=save_dir,
-                                         save_to_disk=True,
-                                         logger=logger)
+    checkpointer = DetectronCheckpointer(
+        cfg, model, optimizer, save_dir=save_dir, save_to_disk=True, logger=logger
+    )
 
     _ = checkpointer.load()
 
@@ -102,53 +105,60 @@ def train(cfg):
     end = time.time()
     model_file_name = checkpointer.get_checkpoint_file()
     if model_file_name:
-        start_epoch = int(os.path.split(checkpointer.get_checkpoint_file())[1].split('.')[0].split('_')[1])
+        start_epoch = int(
+            os.path.split(checkpointer.get_checkpoint_file())[1]
+            .split(".")[0]
+            .split("_")[1]
+        )
     else:
-        start_epoch = arguments['epoch']
+        start_epoch = arguments["epoch"]
+
+    scheduler = make_lr_scheduler(cfg, optimizer, epoch=start_epoch)
 
     epoch_size = len(train_loader)
 
     global_iteration = epoch_size * start_epoch
 
-    if local_rank == 0:
-        wandb.init(
-            project='hisup-multi',
-            group="crowdai_hrnet48",
-            job_type="train",
-            config={
-                "model": cfg.MODEL.NAME,
-                "dataset": cfg.DATASETS.TRAIN[0],
-                "max_epoch": max_epoch,
-                "batch_size": cfg.SOLVER.IMS_PER_BATCH,
-                "lr": cfg.SOLVER.BASE_LR,
-                "weight_decay": cfg.SOLVER.WEIGHT_DECAY,
-                "loss_weights": cfg.MODEL.LOSS_WEIGHTS,
-                "optimizer": cfg.SOLVER.OPTIMIZER,
-            },
-        )
+    now = datetime.datetime.now().strftime("%Y%m%d-%H%M")
+    wandb.init(
+        name=f"train-{torch.cuda.get_device_name(local_rank)}-({local_rank})-{now}",
+        project="hisup-multi",
+        group="crowdai_hrnet48",
+        job_type="train",
+        config={
+            "model": cfg.MODEL.NAME,
+            "dataset": cfg.DATASETS.TRAIN[0],
+            "max_epoch": max_epoch,
+            "batch_size": cfg.SOLVER.IMS_PER_BATCH,
+            "lr": cfg.SOLVER.BASE_LR,
+            "weight_decay": cfg.SOLVER.WEIGHT_DECAY,
+            "loss_weights": cfg.MODEL.LOSS_WEIGHTS,
+            "optimizer": cfg.SOLVER.OPTIMIZER,
+        },
+    )
 
-    for epoch in range(start_epoch + 1, arguments['max_epoch'] + 1):
+    for epoch in range(start_epoch + 1, arguments["max_epoch"] + 1):
         meters = MetricLogger(" ")
         model.train()
-        arguments['epoch'] = epoch
+        arguments["epoch"] = epoch
 
         for it, (images, annotations) in enumerate(train_loader):
             data_time = time.time() - end
             images = images.to(device)
             annotations = to_device(annotations, device)
 
-            loss_dict, _ = model(images,annotations)
+            loss_dict, _ = model(images, annotations)
             total_loss = loss_reducer(loss_dict)
 
             with torch.no_grad():
-                loss_dict_reduced = {k:v.item() for k,v in loss_dict.items()}
+                loss_dict_reduced = {k: v.item() for k, v in loss_dict.items()}
                 loss_reduced = total_loss.item()
                 meters.update(loss=loss_reduced, **loss_dict_reduced)
-            
+
             optimizer.zero_grad()
             total_loss.backward()
             optimizer.step()
-            global_iteration +=1
+            global_iteration += 1
 
             batch_time = time.time() - end
             end = time.time()
@@ -179,20 +189,27 @@ def train(cfg):
                             memory=torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
                         )
                     )
-                    wandb.log({
+                wandb.log(
+                    {
                         "train": {
                             "epoch": epoch,
                             "iter": it,
+                            "batch_time_seconds": batch_time,
+                            "eta_seconds": eta_seconds,
+                            "eta_batch": eta_batch,
                             "images-per-second": images.shape[0] / batch_time,
                             "image-iter": it * images.shape[0],
                             "lr": optimizer.param_groups[0]["lr"],
                             **meters.to_dict(),
-                            "max mem": torch.cuda.max_memory_allocated() / 1024.0 / 1024.0,
+                            "max mem": torch.cuda.max_memory_allocated()
+                            / 1024.0
+                            / 1024.0,
                         }
-                    })
+                    }
+                )
 
         if local_rank == 0:
-            checkpointer.save('model_{:05d}'.format(epoch))
+            checkpointer.save("model_{:05d}".format(epoch))
         scheduler.step()
 
     total_training_time = time.time() - start_training_time
@@ -204,43 +221,40 @@ def train(cfg):
         )
     )
 
-    if local_rank == 0:
+    # if local_rank == 0:
     wandb.run.summary["total_training_time"] = total_training_time
     wandb.run.summary["avg_time_per_epoch"] = total_training_time / (max_epoch)
 
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Training")
 
-    parser = argparse.ArgumentParser(description='Training')
+    parser.add_argument(
+        "--config-file",
+        metavar="FILE",
+        help="path to config file",
+        type=str,
+        required=True,
+    )
 
-    parser.add_argument("--config-file",
-                        metavar="FILE",
-                        help="path to config file",
-                        type=str,
-                        required=True,
-                        )
+    parser.add_argument("--clean", default=False, action="store_true")
 
-    parser.add_argument("--clean",
-                        default=False,
-                        action='store_true')
+    parser.add_argument("--seed", default=2, type=int)
 
-    parser.add_argument("--seed",
-                        default=2,
-                        type=int)
+    parser.add_argument(
+        "opts",
+        help="Modify config options using the command-line",
+        default=None,
+        nargs=argparse.REMAINDER,
+    )
 
-    parser.add_argument("opts",
-                        help="Modify config options using the command-line",
-                        default=None,
-                        nargs=argparse.REMAINDER
-                        )
+    parser.add_argument(
+        "--local_rank", default=0, type=int, help="node rank for distributed training"
+    )
 
-    parser.add_argument('--local_rank', default=0, type=int,
-                        help='node rank for distributed training')
-
-    parser.add_argument("--model",
-                        type=str,
-                        default="last",
-                        required=False,
-                        help="predict model")
+    parser.add_argument(
+        "--model", type=str, default="last", required=False, help="predict model"
+    )
 
     args = parser.parse_args()
 
@@ -256,17 +270,22 @@ if __name__ == "__main__":
             shutil.rmtree(output_dir)
         os.makedirs(output_dir, exist_ok=True)
 
-    logger = setup_logger('hawp', output_dir, out_file='train.log')
+    logger = setup_logger("hawp", output_dir, out_file="train.log")
     logger.info(args)
     logger.info("Loaded configuration file {}".format(args.config_file))
 
     with open(args.config_file, "r") as cf:
         config_str = "\n" + cf.read()
 
-    output_config_path = os.path.join(cfg.OUTPUT_DIR, 'config.yml')
+    output_config_path = os.path.join(cfg.OUTPUT_DIR, "config.yml")
     logger.info("Saving config into: {}".format(output_config_path))
 
     save_config(cfg, output_config_path)
     set_random_seed(args.seed)
-    train(cfg)
-    wandb.finish()
+    try:
+        train(cfg)
+    except Exception as e:
+        logger.error(e)
+        print(e)
+    finally:
+        wandb.finish()
