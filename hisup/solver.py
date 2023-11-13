@@ -32,7 +32,7 @@ def make_optimizer(cfg, model):
         raise NotImplementedError()
     return optimizer
 
-def make_lr_scheduler(cfg, optimizer):
+def make_lr_scheduler(cfg, optimizer, epoch):
     if cfg.SOLVER.OPTIMIZER == 'ADAMcos':
         t = cfg.SOLVER.STATIC_STEP
         max_ep = cfg.SOLVER.MAX_EPOCH
@@ -41,4 +41,4 @@ def make_lr_scheduler(cfg, optimizer):
             else 0.5*(1+math.cos(math.pi*(epoch-t)/(max_ep-t)))
         return torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
     else:
-        return torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg.SOLVER.STEPS, gamma=cfg.SOLVER.GAMMA)
+        return torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg.SOLVER.STEPS, gamma=cfg.SOLVER.GAMMA, last_epoch=epoch)
