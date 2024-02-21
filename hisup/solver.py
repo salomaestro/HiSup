@@ -40,5 +40,5 @@ def make_lr_scheduler(cfg, optimizer, epoch):
             if 0.5*(1+math.cos(math.pi*(epoch-t)/(max_ep-t))) < 0.00001 \
             else 0.5*(1+math.cos(math.pi*(epoch-t)/(max_ep-t)))
         return torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
-    else:
-        return torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg.SOLVER.STEPS, gamma=cfg.SOLVER.GAMMA, last_epoch=epoch)
+
+    return torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=cfg.SOLVER.STEPS, gamma=cfg.SOLVER.GAMMA, last_epoch=epoch if epoch > 0 else -1)
