@@ -61,8 +61,13 @@ class TrainDataset(Dataset):
                 segm[:, 1] = np.clip(segm[:, 1], 0, height - 1e-4)
                 points = segm[:-1]
                 junc_tags = np.ones(points.shape[0])
+
+                if len(points) < 3:
+                    continue
+
                 if i == 0:  # outline
                     poly = Polygon(points)
+
                     if poly.area > 0:
                         convex_point = np.array(poly.convex_hull.exterior.coords)
                         convex_index = [(p == convex_point).all(1).any() for p in points]
