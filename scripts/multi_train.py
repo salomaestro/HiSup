@@ -121,10 +121,8 @@ def train(cfg):
 
     now = datetime.datetime.now().strftime("%Y%m%d-%H%M")
     wandb.init(
-        name=f"train-{torch.cuda.get_device_name(local_rank)}-({local_rank})-{now}",
-        project="hisup-multi",
-        group="crowdai_hrnet48",
-        job_type="train",
+        name=f"train-{torch.cuda.get_device_name(local_rank)}-({local_rank})",
+        project="terratec-training",
         config={
             "model": cfg.MODEL.NAME,
             "dataset": cfg.DATASETS.TRAIN[0],
