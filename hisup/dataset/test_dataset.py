@@ -9,6 +9,9 @@ from shapely.geometry import Polygon
 from torch.utils.data.dataloader import default_collate
 
 class TestDatasetWithAnnotations(dset.coco.CocoDetection):
+    """
+    https://pytorch.org/vision/main/_modules/torchvision/datasets/coco.html#CocoDetection.__getitem__
+    """
     def __init__(self, root, ann_file, transform = None):
         super(TestDatasetWithAnnotations, self).__init__(root, ann_file)
 
@@ -25,6 +28,7 @@ class TestDatasetWithAnnotations(dset.coco.CocoDetection):
 
         ann = {
             'filename': img_info['file_name'],
+            'img_id': self.ids[idx],
             'width': width,
             'height': height,
             'junctions': [],
@@ -47,7 +51,7 @@ class TestDatasetWithAnnotations(dset.coco.CocoDetection):
                 points = segm[:-1]
                 junc_tags = np.ones(points.shape[0])
                 if i == 0:  # outline
-                    poly = Polygon(points)
+                    poly = Polygon(segm)
                     if poly.area > 0:
                         convex_point = np.array(poly.convex_hull.exterior.coords)
                         convex_index = [(p == convex_point).all(1).any() for p in points]
