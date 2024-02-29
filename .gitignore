@@ -2,6 +2,7 @@
 __pycache__/
 
 springfield
+terratec/
 test_imgs/
 boundary-iou-api/
 build/*
@@ -19,3 +20,4 @@ exp/*
 pickled_annotations.pkl
 scripts/prediction_cluster.py
 scripts/prediction_cluster_plot.py
+config-test.py
