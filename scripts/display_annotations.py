@@ -74,6 +74,7 @@ def get_random_image_id(gt):
 
 
 def load_image(image_path):
+    print("Reading image:", image_path)
     return io.imread(image_path)
 
 
@@ -100,9 +101,30 @@ def get_image_ann(gt, results, image_dir, image_id=None):
     return image_path, gt_annotations, pred_annotations
 
 
+def gen_nonempty_image_id(gt):
+    image_ids = gt.getImgIds()
+    for image_id in image_ids:
+        ann_ids = gt.getAnnIds(imgIds=image_id)
+        if ann_ids:
+            yield image_id
+
+
+def get_nonempty_image_id(gt, n=1):
+    for image_id in gen_nonempty_image_id(gt):
+        if n == 0:
+            break
+        yield image_id
+        n -= 1
+
+
+def find_all_nonempty_image_ids(gt):
+    return list(gen_nonempty_image_id(gt))
+
+
 def display_annotations(gt, results, image_dir, image_id):
     if image_id is None:
         image_id = random.choice(gt.getImgIds())
+
     if not isinstance(image_dir, Path):
         image_dir = Path(image_dir)
 
@@ -130,18 +152,36 @@ def display_annotations(gt, results, image_dir, image_id):
     gt_polygons = generate_annotations_gt(gt_annotations)
     dt_polygons = generate_annotations_dt(pred_annotations, ax)
 
-    p = PatchCollection(gt_polygons, facecolors=GROUND_TRUTH_COLOR, linewidths=0, alpha=0.3)
+    p = PatchCollection(
+        gt_polygons, facecolors=GROUND_TRUTH_COLOR, linewidths=0, alpha=0.3
+    )
     ax.add_collection(p)
-    p = PatchCollection(gt_polygons, facecolors="none", edgecolors=GROUND_TRUTH_COLOR, linewidths=2)
+    p = PatchCollection(
+        gt_polygons, facecolors="none", edgecolors=GROUND_TRUTH_COLOR, linewidths=2
+    )
     ax.add_collection(p)
 
-    p = PatchCollection(dt_polygons, facecolors=PREDICTION_COLOR, linewidths=0, alpha=0.3)
+    p = PatchCollection(
+        dt_polygons, facecolors=PREDICTION_COLOR, linewidths=0, alpha=0.3
+    )
     ax.add_collection(p)
-    p = PatchCollection(dt_polygons, facecolors="none", edgecolors=PREDICTION_COLOR, linewidths=2)
+    p = PatchCollection(
+        dt_polygons, facecolors="none", edgecolors=PREDICTION_COLOR, linewidths=2
+    )
     ax.add_collection(p)
 
     plt.tight_layout()
     return fig, ax
+
+def plot_n_annotations(gt, results, image_dir, n, apply_func=lambda x: x):
+    image_ids = apply_func(find_all_nonempty_image_ids(gt))
+    figs = []
+    axs = []
+    for i in range(n):
+        fig, ax = display_annotations(gt, results, image_dir, image_ids[i])
+        figs.append(fig)
+        axs.append(ax)
+    return figs, axs
 
 
 def main(gt_annotations_path, pred_annotations_path, image_dir, image_id, num_images):
