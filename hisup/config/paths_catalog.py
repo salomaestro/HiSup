@@ -32,22 +32,70 @@ class DatasetCatalog(object):
             "img_dir": "coco-Aerial/val/images",
             "ann_file": "coco-Aerial/val/annotation.json",
         },
-        "terratec_train_small": {
+        "terratec_train_tiny": {
             "img_dir": "terratec/subset-32-1-514-127-20_39o/train/images",
             "ann_file": "terratec/subset-32-1-514-127-20_39o/train/annotation.json",
         },
-        "terratec_test_small": {
+        "terratec_test_tiny": {
             "img_dir": "terratec/subset-32-1-514-127-20_39o/test/images",
             "ann_file": "terratec/subset-32-1-514-127-20_39o/test/annotation.json",
         },
-        "terratec_val_small": {
+        "terratec_val_tiny": {
             "img_dir": "terratec/subset-32-1-514-127-20_39o/val/images",
             "ann_file": "terratec/subset-32-1-514-127-20_39o/val/annotation.json",
+        },
+        "terratec_train_small_2018": {
+            "img_dir": "terratec/dataset2018/train/images",
+            "ann_file": "terratec/dataset2018/train/annotation-small-2018.json",
+        },
+        "terratec_test_small_2018": {
+            "img_dir": "terratec/dataset2018/test/images",
+            "ann_file": "terratec/dataset2018/test/annotation-small-2018.json",
+        },
+        "terratec_val_small_2018": {
+            "img_dir": "terratec/dataset2018/val/images",
+            "ann_file": "terratec/dataset2018/val/annotation-small-2018.json",
+        },
+        "terratec_train_2018": {
+            "img_dir": "terratec/dataset2018/train/images",
+            "ann_file": "terratec/dataset2018/train/annotation-2018.json",
+        },
+        "terratec_test_2018": {
+            "img_dir": "terratec/dataset2018/test/images",
+            "ann_file": "terratec/dataset2018/test/annotation-2018.json",
+        },
+        "terratec_val_2018": {
+            "img_dir": "terratec/dataset2018/val/images",
+            "ann_file": "terratec/dataset2018/val/annotation-2018.json",
+        },
+        "terratec_train_small_2019": {
+            "img_dir": "terratec/dataset2018/train/images",
+            "ann_file": "terratec/dataset2018/train/annotation-small-2019.json",
+        },
+        "terratec_test_small_2019": {
+            "img_dir": "terratec/dataset2018/test/images",
+            "ann_file": "terratec/dataset2018/test/annotation-small-2019.json",
+        },
+        "terratec_val_small_2019": {
+            "img_dir": "terratec/dataset2018/val/images",
+            "ann_file": "terratec/dataset2018/val/annotation-small-2019.json",
+        },
+        "terratec_train_2019": {
+            "img_dir": "terratec/dataset2018/train/images",
+            "ann_file": "terratec/dataset2018/train/annotation-2019.json",
+        },
+        "terratec_test_2019": {
+            "img_dir": "terratec/dataset2018/test/images",
+            "ann_file": "terratec/dataset2018/test/annotation-2019.json",
+        },
+        "terratec_val_2019": {
+            "img_dir": "terratec/dataset2018/val/images",
+            "ann_file": "terratec/dataset2018/val/annotation-2019.json",
         },
     }
 
     @staticmethod
-    def get(name):
+    def get(name, mode):
         assert name in DatasetCatalog.DATASETS
         data_dir = DatasetCatalog.DATA_DIR
         attrs = DatasetCatalog.DATASETS[name]
@@ -57,8 +105,8 @@ class DatasetCatalog(object):
             ann_file=osp.join(data_dir, attrs["ann_file"]),
         )
 
-        if "train" in name:
+        if "train" in mode:
             return dict(factory="TrainDataset", args=args)
-        if "test" in name and "ann_file" in attrs:
+        if ("test" in mode or "val" in mode) and "ann_file" in attrs:
             return dict(factory="TestDatasetWithAnnotations", args=args)
         raise NotImplementedError()
