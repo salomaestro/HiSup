@@ -44,53 +44,33 @@ class DatasetCatalog(object):
             "img_dir": "terratec/subset-32-1-514-127-20_39o/val/images",
             "ann_file": "terratec/subset-32-1-514-127-20_39o/val/annotation.json",
         },
-        "terratec_train_small_2018": {
+        "terratec_train_small": {
             "img_dir": "terratec/dataset2018/train/images",
-            "ann_file": "terratec/dataset2018/train/annotation-small-2018.json",
+            "ann_file": "terratec/dataset2018/train/annotation-small.json",
         },
-        "terratec_test_small_2018": {
+        "terratec_test_small": {
             "img_dir": "terratec/dataset2018/test/images",
-            "ann_file": "terratec/dataset2018/test/annotation-small-2018.json",
+            "ann_file": "terratec/dataset2018/test/annotation-small.json",
         },
-        "terratec_val_small_2018": {
+        "terratec_val_small": {
             "img_dir": "terratec/dataset2018/val/images",
-            "ann_file": "terratec/dataset2018/val/annotation-small-2018.json",
+            "ann_file": "terratec/dataset2018/val/annotation-small.json",
         },
-        "terratec_train_2018": {
+        "terratec_train": {
             "img_dir": "terratec/dataset2018/train/images",
-            "ann_file": "terratec/dataset2018/train/annotation-2018.json",
+            "ann_file": "terratec/dataset2018/train/annotation.json",
         },
-        "terratec_test_2018": {
+        "terratec_test": {
             "img_dir": "terratec/dataset2018/test/images",
-            "ann_file": "terratec/dataset2018/test/annotation-2018.json",
+            "ann_file": "terratec/dataset2018/test/annotation.json",
         },
-        "terratec_val_2018": {
+        "terratec_val": {
             "img_dir": "terratec/dataset2018/val/images",
-            "ann_file": "terratec/dataset2018/val/annotation-2018.json",
+            "ann_file": "terratec/dataset2018/val/annotation.json",
         },
-        "terratec_train_small_2019": {
-            "img_dir": "terratec/dataset2018/train/images",
-            "ann_file": "terratec/dataset2018/train/annotation-small-2019.json",
-        },
-        "terratec_test_small_2019": {
-            "img_dir": "terratec/dataset2018/test/images",
-            "ann_file": "terratec/dataset2018/test/annotation-small-2019.json",
-        },
-        "terratec_val_small_2019": {
-            "img_dir": "terratec/dataset2018/val/images",
-            "ann_file": "terratec/dataset2018/val/annotation-small-2019.json",
-        },
-        "terratec_train_2019": {
-            "img_dir": "terratec/dataset2018/train/images",
-            "ann_file": "terratec/dataset2018/train/annotation-2019.json",
-        },
-        "terratec_test_2019": {
-            "img_dir": "terratec/dataset2018/test/images",
-            "ann_file": "terratec/dataset2018/test/annotation-2019.json",
-        },
-        "terratec_val_2019": {
-            "img_dir": "terratec/dataset2018/val/images",
-            "ann_file": "terratec/dataset2018/val/annotation-2019.json",
+        "terratec_overtrain": {
+            "img_dir": "terratec/dataset2018/overtrain/images",
+            "ann_file": "terratec/dataset2018/overtrain/annotation.json",
         },
     }
 
