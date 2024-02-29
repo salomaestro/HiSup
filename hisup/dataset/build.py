@@ -22,7 +22,7 @@ def build_transform(cfg):
 def build_train_dataset(cfg):
     assert len(cfg.DATASETS.TRAIN) == 1
     name = cfg.DATASETS.TRAIN[0]
-    dargs = DatasetCatalog.get(name)
+    dargs = DatasetCatalog.get(name, "train")
 
     factory = getattr(train_dataset, dargs['factory'])
     args = dargs['args']
@@ -50,7 +50,7 @@ def build_train_dataset(cfg):
 def build_train_dataset_multi(cfg):
     assert len(cfg.DATASETS.TRAIN) == 1
     name = cfg.DATASETS.TRAIN[0]
-    dargs = DatasetCatalog.get(name)
+    dargs = DatasetCatalog.get(name, "train")
 
     factory = getattr(train_dataset, dargs['factory'])
     args = dargs['args']
@@ -82,7 +82,7 @@ def build_test_dataset(cfg):
     )
 
     name = cfg.DATASETS.TEST[0]
-    dargs = DatasetCatalog.get(name)
+    dargs = DatasetCatalog.get(name, "test")
     factory = getattr(test_dataset, dargs['factory'])
     args = dargs['args']
     args['transform'] = transforms
