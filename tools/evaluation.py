@@ -10,7 +10,6 @@ from hisup.utils.metrics.angle_eval import ContourEval
 from hisup.utils.metrics.cIoU import compute_IoU_cIoU
 from hisup.utils.metrics.polis import PolisEval
 
-
 def coco_eval(annFile, resFile):
     type = 1
     annType = ["bbox", "segm"]
@@ -24,7 +23,7 @@ def coco_eval(annFile, resFile):
 
     cocoEval = COCOeval(cocoGt, cocoDt, annType[type])
     cocoEval.params.imgIds = imgIds
-    cocoEval.params.catIds = [100]
+    cocoEval.params.catIds = [1]
     cocoEval.evaluate()
     cocoEval.accumulate()
     cocoEval.summarize()
