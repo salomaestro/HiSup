@@ -11,10 +11,11 @@ sys.path.append("/storage/experiments/hisup")
 import torch
 
 from hisup.config import cfg
+from hisup.config.paths_catalog import DatasetCatalog
 from hisup.detector import BuildingDetector
 from hisup.utils.checkpoint import DetectronCheckpointer
 from hisup.utils.logger import setup_logger
-from scripts.display_annotations import create_index, display_annotations
+from scripts.display_annotations import create_index, plot_n_annotations
 from tools.test_pipelines import TestPipeline
 
 torch.multiprocessing.set_sharing_strategy("file_system")
@@ -92,34 +93,32 @@ def test(cfg, args, epoch_file=None, epoch=None):
     test_pipeline = TestPipeline(cfg, args.eval_type, wandb.log, epoch)
     result = test_pipeline.test(model)
 
-    gt_file = result["gt_file"]
-    dt_file = result["dt_file"]
+    # gt_file = result["gt_file"]
+    # dt_file = result["dt_file"]
     # dt_mask_file = result["dt_mask_file"]
-    eval = result["eval"]
+    # eval = result["eval"]
 
-    coco_iou = eval["coco_iou"][0]
-    boundary_iou = eval["boundary_iou"][0]
+    # coco_iou = eval["coco_iou"][0]
+    # boundary_iou = eval["boundary_iou"][0]
     # polis = eval["polis"]
 
-    gt, dt = create_index(gt_file, dt_file)
-
-    img_dir = "/storage/datasets/crowdai/val/images"
-    images = []
-    for _ in range(3):
-        fig, _ = display_annotations(gt, dt, img_dir, None)
-        images.append(wandb.Image(fig))
-
-    wandb.log(
-        {
-            "test": {
-                "epoch": epoch,  # TODO: does not always have epoch
-                "coco_iou": coco_iou,
-                "boundary_iou": boundary_iou,
-                # "polis": polis,
-                "images": images,
-            }
-        }
-    )
+    # gt, dt = create_index(gt_file, dt_file)
+    #
+    # img_dir = DatasetCatalog().get(cfg.DATASETS.TEST[0])["args"]["root"]
+    #
+    # figs, _ = plot_n_annotations(gt, dt, img_dir, 3, apply_func=lambda x: sorted(x, key=len, reverse=False))
+    #
+    # wandb.log(
+    #     {
+    #         "test": {
+    #             "epoch": epoch,  # TODO: does not always have epoch
+    #             "coco_iou": coco_iou,
+    #             "boundary_iou": boundary_iou,
+    #             # "polis": polis,
+    #             "images": [wandb.Image(fig) for fig in figs],
+    #         }
+    #     }
+    # )
 
 
 if __name__ == "__main__":
@@ -142,8 +141,7 @@ if __name__ == "__main__":
         logger.info("Loaded the default configuration for testing")
 
     wandb.init(
-        project="hisup-multi",
-        group="test",
+        project="Terratec-test-pretrained", # might need to change this
         config={
             "model": cfg.MODEL.NAME,
             "dataset": cfg.DATASETS.TRAIN[0],
