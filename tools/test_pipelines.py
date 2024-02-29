@@ -9,6 +9,7 @@ import scipy.ndimage
 import torch
 from PIL import Image
 from pycocotools import mask as coco_mask
+from pycocotools.coco import COCO
 from shapely.geometry import Polygon
 from skimage import io
 from skimage.measure import label, regionprops
@@ -33,7 +34,7 @@ def poly_to_bbox(poly):
     return [float(lt_x), float(lt_y), float(w), float(h)]
 
 
-def generate_coco_ann(polys, scores, img_id):
+def generate_coco_ann(polys, scores, img_id, catid=100):
     sample_ann = []
     for i, polygon in enumerate(polys):
         if polygon.shape[0] < 3:
@@ -43,7 +44,7 @@ def generate_coco_ann(polys, scores, img_id):
         poly_bbox = poly_to_bbox(polygon)
         ann_per_building = {
             "image_id": img_id,
-            "category_id": 100,
+            "category_id": catid,
             "segmentation": [vec_poly],
             "bbox": poly_bbox,
             "score": float(scores[i]),
@@ -99,6 +100,12 @@ class TestPipeline:
             return self.test_on_crowdai(model, self.dataset_name)
         elif "inria" in self.dataset_name:
             return self.test_on_inria(model, self.dataset_name)
+        elif "terratec" in self.dataset_name:
+            return self.test_on_terratec(model, self.dataset_name)
+        else:
+            raise NotImplementedError(
+                "The dataset {} is not supported yet".format(self.dataset_name)
+            )
 
     def eval(self, prepend=""):
         logger = logging.getLogger("testing")
@@ -131,6 +138,107 @@ class TestPipeline:
             result[prepend + eval_type] = eval_func(self.gt_file, self.dt_file)
 
         return result
+
+    def test_on_terratec(self, model, dataset_name):
+        logger = logging.getLogger("testing")
+        logger.info("Testing on {} dataset".format(dataset_name))
+
+        results = []
+        scores_result = []
+        mask_results = []
+        test_dataset, gt_file = build_test_dataset(self.cfg)
+
+        for i, (images, annotations) in enumerate(tqdm(test_dataset)):
+            with torch.no_grad():
+                output, _ = model(
+                    images.to(self.device),
+                    to_single_device(annotations, self.device),
+                )
+                output = to_single_device(output, "cpu")
+
+            batch_size = images.size(0)
+            batch_scores = output["scores"]
+            batch_polygons = output["polys_pred"]
+            batch_masks = output["mask_pred"]
+
+            for b in range(batch_size):
+                img_id = annotations[b]["img_id"]
+
+                scores = batch_scores[b]
+                polys = batch_polygons[b]
+                mask_pred = batch_masks[b]
+
+                image_result = generate_coco_ann(polys, scores, img_id, catid=1)
+                if len(image_result) != 0:
+                    results.extend(image_result)
+
+                image_masks = generate_coco_mask(mask_pred, img_id)
+                if len(image_masks) != 0:
+                    mask_results.extend(image_masks)
+
+            scores_result.extend(batch_scores)
+
+            if self.wandb_logger:
+                self.wandb_logger(
+                    {
+                        "test": {
+                            "epoch": self.epoch,
+                            "batch_score_mean": np.mean(
+                                [s for img_scores in batch_scores for s in img_scores]
+                            ),
+                            "iter": i,
+                            "image_count": len(results),
+                        }
+                    }
+                )
+
+        if self.wandb_logger:
+            self.wandb_logger(
+                {
+                    "test": {
+                        "epoch": self.epoch,
+                        "score_mean": np.mean(scores_result),
+                        "score_median": np.median(scores_result),
+                    }
+                }
+            )
+
+        dt_file = osp.join(self.output_dir, "{}.json".format(dataset_name))
+        logger.info(
+            "Writing the results of the {} dataset into {}".format(
+                dataset_name, dt_file
+            )
+        )
+
+        with open(dt_file, "w") as _out:
+            json.dump(results, _out)
+
+        self.gt_file = gt_file
+        self.dt_file = dt_file
+        eval_result = self.eval()
+
+        produced_files = {}
+        produced_files["gt_file"] = gt_file
+        produced_files["dt_file"] = dt_file
+
+        dt_file = osp.join(self.output_dir, "{}_mask.json".format(dataset_name))
+        logger.info(
+            "Writing the results of the {} dataset into {}".format(
+                dataset_name, dt_file
+            )
+        )
+        with open(dt_file, "w") as _out:
+            json.dump(mask_results, _out)
+
+        self.dt_file = dt_file
+        eval_mask_result = self.eval(prepend="mask_")
+
+        all_eval_result = {**eval_result, **eval_mask_result}
+
+        produced_files["dt_mask_file"] = dt_file
+        produced_files["eval"] = all_eval_result
+
+        return produced_files
 
     def test_on_crowdai(self, model, dataset_name):
         logger = logging.getLogger("testing")
