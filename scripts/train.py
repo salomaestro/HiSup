@@ -115,7 +115,6 @@ def train(cfg):
     start_training_time = time.time()
     end = time.time()
 
-    start_epoch = arguments["epoch"]
     epoch_size = len(train_dataset)
 
     global_iteration = epoch_size * start_epoch
