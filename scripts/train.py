@@ -187,7 +187,7 @@ def train(cfg):
                 wandb.log(
                     {
                         "train": {
-                            "epoch": epoch,
+                            "epoch": start_epoch + epoch,
                             "iter": it,
                             "lr": optimizer.param_groups[0]["lr"],
                             **meters.to_dict(),
