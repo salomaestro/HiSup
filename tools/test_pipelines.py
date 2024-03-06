@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import os.path as osp
+import pickle
 
 import numpy as np
 import scipy
@@ -13,8 +14,10 @@ from pycocotools.coco import COCO
 from shapely.geometry import Polygon
 from skimage import io
 from skimage.measure import label, regionprops
+from torchvision.utils import make_grid
 from tqdm import tqdm
 
+from hisup.config.paths_catalog import DatasetCatalog
 from hisup.dataset import build_test_dataset
 from hisup.dataset.build import build_transform
 from hisup.utils.comm import to_single_device
@@ -54,7 +57,7 @@ def generate_coco_ann(polys, scores, img_id, catid=100):
     return sample_ann
 
 
-def generate_coco_mask(mask, img_id):
+def generate_coco_mask(mask, img_id, catid=100):
     sample_ann = []
     props = regionprops(label(mask > 0.50))
     for prop in props:
@@ -67,7 +70,7 @@ def generate_coco_mask(mask, img_id):
             encoded_region = coco_mask.encode(np.asfortranarray(prop_mask))
             ann_per_building = {
                 "image_id": img_id,
-                "category_id": 100,
+                "category_id": catid,
                 "segmentation": {
                     "size": encoded_region["size"],
                     "counts": encoded_region["counts"].decode(),
@@ -148,9 +151,11 @@ class TestPipeline:
         mask_results = []
         test_dataset, gt_file = build_test_dataset(self.cfg)
 
+        internal_results = []
+
         for i, (images, annotations) in enumerate(tqdm(test_dataset)):
             with torch.no_grad():
-                output, _ = model(
+                output, extra_output = model(
                     images.to(self.device),
                     to_single_device(annotations, self.device),
                 )
@@ -160,6 +165,8 @@ class TestPipeline:
             batch_scores = output["scores"]
             batch_polygons = output["polys_pred"]
             batch_masks = output["mask_pred"]
+
+            # internal_results.extend(extra_output)
 
             for b in range(batch_size):
                 img_id = annotations[b]["img_id"]
@@ -172,36 +179,14 @@ class TestPipeline:
                 if len(image_result) != 0:
                     results.extend(image_result)
 
-                image_masks = generate_coco_mask(mask_pred, img_id)
+                image_masks = generate_coco_mask(mask_pred, img_id, catid=1)
                 if len(image_masks) != 0:
                     mask_results.extend(image_masks)
 
+                extra_output[b]["img_id"] = img_id
+                internal_results.append(extra_output[b])
+
             scores_result.extend(batch_scores)
-
-            if self.wandb_logger:
-                self.wandb_logger(
-                    {
-                        "test": {
-                            "epoch": self.epoch,
-                            "batch_score_mean": np.mean(
-                                [s for img_scores in batch_scores for s in img_scores]
-                            ),
-                            "iter": i,
-                            "image_count": len(results),
-                        }
-                    }
-                )
-
-        if self.wandb_logger:
-            self.wandb_logger(
-                {
-                    "test": {
-                        "epoch": self.epoch,
-                        "score_mean": np.mean(scores_result),
-                        "score_median": np.median(scores_result),
-                    }
-                }
-            )
 
         dt_file = osp.join(self.output_dir, "{}.json".format(dataset_name))
         logger.info(
@@ -213,13 +198,10 @@ class TestPipeline:
         with open(dt_file, "w") as _out:
             json.dump(results, _out)
 
-        self.gt_file = gt_file
-        self.dt_file = dt_file
-        eval_result = self.eval()
-
-        produced_files = {}
-        produced_files["gt_file"] = gt_file
-        produced_files["dt_file"] = dt_file
+        cocoGt = COCO(gt_file)
+        coco_res = coco_eval(gt_file, dt_file, cocoGt)
+        boundary_res = boundary_eval(gt_file, dt_file)
+        # polis_res = polis_eval(gt_file, dt_file, cocoGt)
 
         dt_file = osp.join(self.output_dir, "{}_mask.json".format(dataset_name))
         logger.info(
@@ -230,15 +212,35 @@ class TestPipeline:
         with open(dt_file, "w") as _out:
             json.dump(mask_results, _out)
 
-        self.dt_file = dt_file
-        eval_mask_result = self.eval(prepend="mask_")
+        # eval_mask_result = self.eval(prepend="mask_")
 
-        all_eval_result = {**eval_result, **eval_mask_result}
+        mask_coco_res = coco_eval(gt_file, dt_file, cocoGt)
+        mask_boundary_res = boundary_eval(gt_file, dt_file)
+        # mask_polis_res = polis_eval(gt_file, dt_file, cocoGt)
 
-        produced_files["dt_mask_file"] = dt_file
-        produced_files["eval"] = all_eval_result
+        print("Publishing results to wandb...")
+        self.wandb_logger(
+            {
+                "train": {
+                    "epoch": self.epoch,
+                    "eval": {
+                        "coco_res": coco_res,
+                        "boundary_res": boundary_res,
+                        # "polis_res": polis_res,
+                    },
+                    "mask_eval": {
+                        "coco_res": mask_coco_res,
+                        "boundary_res": mask_boundary_res,
+                        # "polis_res": mask_polis_res,
+                    },
+                }
+            }
+        )
 
-        return produced_files
+        with open(osp.join(self.output_dir, "internal_results.pkl"), "wb") as f:
+            pickle.dump(internal_results, f)
+
+        print("Results published to wandb.")
 
     def test_on_crowdai(self, model, dataset_name):
         logger = logging.getLogger("testing")
