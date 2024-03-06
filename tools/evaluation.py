@@ -10,13 +10,19 @@ from hisup.utils.metrics.angle_eval import ContourEval
 from hisup.utils.metrics.cIoU import compute_IoU_cIoU
 from hisup.utils.metrics.polis import PolisEval
 
-def coco_eval(annFile, resFile):
+def coco_eval(annFile, resFile, cocoGt=None):
     type = 1
     annType = ["bbox", "segm"]
     print("Running demo for *%s* results." % (annType[type]))
 
-    cocoGt = COCO(annFile)
-    cocoDt = cocoGt.loadRes(resFile)
+    if not cocoGt:
+        cocoGt = COCO(annFile)
+
+    try:
+        cocoDt = cocoGt.loadRes(resFile)
+    except IndexError as e:
+        print("No detection result found")
+        return []
 
     imgIds = cocoGt.getImgIds()
     imgIds = imgIds[:]
@@ -33,7 +39,13 @@ def coco_eval(annFile, resFile):
 def boundary_eval(annFile, resFile):
     dilation_ratio = 0.02  # default settings 0.02
     cocoGt = BCOCO(annFile, get_boundary=True, dilation_ratio=dilation_ratio)
-    cocoDt = cocoGt.loadRes(resFile)
+
+    try:
+        cocoDt = cocoGt.loadRes(resFile)
+    except IndexError as e:
+        print("No detection result found")
+        return []
+
     cocoEval = BCOCOeval(
         cocoGt, cocoDt, iouType="boundary", dilation_ratio=dilation_ratio
     )
@@ -43,8 +55,9 @@ def boundary_eval(annFile, resFile):
     return cocoEval.stats
 
 
-def polis_eval(annFile, resFile):
-    gt_coco = COCO(annFile)
+def polis_eval(annFile, resFile, gt_coco=None):
+    if not gt_coco:
+        gt_coco = COCO(annFile)
     dt_coco = gt_coco.loadRes(resFile)
     polisEval = PolisEval(gt_coco, dt_coco)
     return polisEval.evaluate()
