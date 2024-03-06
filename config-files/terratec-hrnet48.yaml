@@ -1,8 +1,8 @@
 SOLVER:
-  IMS_PER_BATCH: 4
+  IMS_PER_BATCH: 10
   # BASE_LR: 1e-4
   BASE_LR: 1e-5
-  MAX_EPOCH: 500
+  MAX_EPOCH: 200
   STEPS: (25,)
   WEIGHT_DECAY: 0.0001
   CHECKPOINT_PERIOD: 1
@@ -10,7 +10,7 @@ SOLVER:
   AMSGRAD: True
   LR_SCHEDULER: "CyclicLR"
   CYCLIC_MAX_LR: 1e-2
-  CYCLIC_STEP_SIZE_UP: 50
+  CYCLIC_STEP_SIZE_UP: 1000
 
 DATALOADER:
   NUM_WORKERS: 8
@@ -28,8 +28,8 @@ DATASETS:
   ORIGIN:
     HEIGHT: 512
     WIDTH: 512
-  TRAIN: ("terratec_overtrain",)
-  TEST: ("terratec_overtrain",)
+  TRAIN: ("terratec_train",)
+  TEST: ("terratec_val",)
 
 MODEL:
   NAME: "HRNet48v2"
@@ -42,4 +42,5 @@ MODEL:
     loss_afm: 0.1
     loss_remask: 1.0
 
-OUTPUT_DIR: "./outputs/terratec-overtrain_hrnet48-cyclic-triangular2"
+OUTPUT_DIR: "./outputs/terratec-hrnet48-cyclic"
+# OUTPUT_DIR: "./outputs/terratec-hrnet48"
