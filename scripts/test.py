@@ -93,33 +93,6 @@ def test(cfg, args, epoch_file=None, epoch=None):
     test_pipeline = TestPipeline(cfg, args.eval_type, wandb.log, epoch)
     result = test_pipeline.test(model)
 
-    # gt_file = result["gt_file"]
-    # dt_file = result["dt_file"]
-    # dt_mask_file = result["dt_mask_file"]
-    # eval = result["eval"]
-
-    # coco_iou = eval["coco_iou"][0]
-    # boundary_iou = eval["boundary_iou"][0]
-    # polis = eval["polis"]
-
-    # gt, dt = create_index(gt_file, dt_file)
-    #
-    # img_dir = DatasetCatalog().get(cfg.DATASETS.TEST[0])["args"]["root"]
-    #
-    # figs, _ = plot_n_annotations(gt, dt, img_dir, 3, apply_func=lambda x: sorted(x, key=len, reverse=False))
-    #
-    # wandb.log(
-    #     {
-    #         "test": {
-    #             "epoch": epoch,  # TODO: does not always have epoch
-    #             "coco_iou": coco_iou,
-    #             "boundary_iou": boundary_iou,
-    #             # "polis": polis,
-    #             "images": [wandb.Image(fig) for fig in figs],
-    #         }
-    #     }
-    # )
-
 
 if __name__ == "__main__":
     args = parse_args()
@@ -141,10 +114,10 @@ if __name__ == "__main__":
         logger.info("Loaded the default configuration for testing")
 
     wandb.init(
-        project="Terratec-test-pretrained", # might need to change this
+        project="terratec-overtrain",  # might need to change this
         config={
             "model": cfg.MODEL.NAME,
-            "dataset": cfg.DATASETS.TRAIN[0],
+            "dataset": cfg.DATASETS.TEST[0],
         },
     )
 
