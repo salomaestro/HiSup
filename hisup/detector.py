@@ -136,8 +136,14 @@ class BuildingDetector(nn.Module):
         extra_info = []
 
         for b in range(remask_pred.size(0)):
+
+            pred_mask = remask_pred[b][0].cpu().numpy()
+            if self.cfg.MODEL.REMASK:
+                # Replace the remask_pred with mask_pred to test the model without the remasking module
+                pred_mask = mask_pred[b][0].cpu().numpy()
+
             mask_pred_per_im = cv2.resize(
-                remask_pred[b][0].cpu().numpy(), (self.origin_width, self.origin_height)
+                pred_mask, (self.origin_width, self.origin_height)
             )
             juncs_pred = get_pred_junctions(
                 jloc_concave_pred[b], jloc_convex_pred[b], joff_pred[b]
