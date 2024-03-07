@@ -10,7 +10,7 @@ SOLVER:
   AMSGRAD: True
   LR_SCHEDULER: "CyclicLR"
   CYCLIC_MAX_LR: 1e-2
-  CYCLIC_STEP_SIZE_UP: 1000
+  CYCLIC_STEP_SIZE_UP: 100
 
 DATALOADER:
   NUM_WORKERS: 8
@@ -41,6 +41,7 @@ MODEL:
     loss_mask: 1.0
     loss_afm: 0.1
     loss_remask: 1.0
+  REMASK: True
 
 OUTPUT_DIR: "./outputs/terratec-hrnet48-cyclic"
 # OUTPUT_DIR: "./outputs/terratec-hrnet48"
