@@ -1,6 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved.
-from collections import defaultdict
-from collections import deque
+from collections import defaultdict, deque
 
 import torch
 
@@ -54,8 +53,9 @@ class MetricLogger(object):
             return self.meters[attr]
         if attr in self.__dict__:
             return self.__dict__[attr]
-        raise AttributeError("'{}' object has no attribute '{}'".format(
-                    type(self).__name__, attr))
+        raise AttributeError(
+            "'{}' object has no attribute '{}'".format(type(self).__name__, attr)
+        )
 
     def __str__(self):
         loss_str = []
@@ -73,16 +73,8 @@ class MetricLogger(object):
         keys = sorted(self.meters)
         for name in keys:
             meter = self.meters[name]
-            name_global_avg = name + '_global_avg'
-            name_median = name + '_median'
+            name_global_avg = name + "_global_avg"
+            name_median = name + "_median"
             loss_dict[name_median] = meter.median
             loss_dict[name_global_avg] = meter.global_avg
         return loss_dict
-
-    def tensorborad(self, iteration, writter, phase='train'):
-        for name, meter in self.meters.items():
-            if 'loss' in name:
-                # writter.add_scalar('average/{}'.format(name), meter.avg, iteration)
-                writter.add_scalar('{}/global/{}'.format(phase,name), meter.global_avg, iteration)
-                # writter.add_scalar('median/{}'.format(name), meter.median, iteration)
-
