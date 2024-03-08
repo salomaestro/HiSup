@@ -201,9 +201,6 @@ class TestPipeline:
         cocoGt = COCO(gt_file)
         coco_res = coco_eval(gt_file, dt_file, cocoGt)
         boundary_res = boundary_eval(gt_file, dt_file)
-        polis_res = polis_eval(gt_file, dt_file, cocoGt)
-        max_angle_error = max_angle_error_eval(gt_file, dt_file, cocoGt)
-        ciou = compute_IoU_cIoU(gt_file, dt_file)
 
         dt_file = osp.join(self.output_dir, "{}_mask.json".format(dataset_name))
         logger.info(
@@ -216,9 +213,6 @@ class TestPipeline:
 
         mask_coco_res = coco_eval(gt_file, dt_file, cocoGt)
         mask_boundary_res = boundary_eval(gt_file, dt_file)
-        mask_polis_res = polis_eval(gt_file, dt_file, cocoGt)
-        mask_max_angle_error = max_angle_error_eval(gt_file, dt_file, cocoGt)
-        mask_ciou = compute_IoU_cIoU(gt_file, dt_file)
 
         print("Publishing results to wandb...")
         self.wandb_logger(
@@ -227,16 +221,10 @@ class TestPipeline:
                 "eval": {
                     "coco_res": coco_res,
                     "boundary_res": boundary_res,
-                    "polis_res": polis_res,
-                    "max_angle_error": max_angle_error,
-                    "ciou": ciou,
                 },
                 "mask_eval": {
                     "coco_res": mask_coco_res,
                     "boundary_res": mask_boundary_res,
-                    "polis_res": mask_polis_res,
-                    "max_angle_error": mask_max_angle_error,
-                    "ciou": mask_ciou,
                 },
             }
         )

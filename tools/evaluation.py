@@ -31,6 +31,9 @@ def parse_coco(cocoEval):
 def verify_index(cocoGt, resFile):
     try:
         cocoDt = cocoGt.loadRes(resFile)
+        if (cocoDt.getAnnIds() == []):
+            print("No detection result found")
+            return []
     except IndexError as e:
         print("No detection result found")
         return []
