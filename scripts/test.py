@@ -91,7 +91,7 @@ def test(cfg, args, epoch_file=None, epoch=None):
         model = model.eval()
 
     test_pipeline = TestPipeline(cfg, args.eval_type, wandb.log, epoch)
-    result = test_pipeline.test(model)
+    test_pipeline.test(model)
 
 
 if __name__ == "__main__":
