@@ -10,6 +10,24 @@ from hisup.utils.metrics.angle_eval import ContourEval
 from hisup.utils.metrics.cIoU import compute_IoU_cIoU
 from hisup.utils.metrics.polis import PolisEval
 
+
+def parse_coco(cocoEval):
+    return {
+        "AP": cocoEval.stats[0],
+        "AP50": cocoEval.stats[1],
+        "AP75": cocoEval.stats[2],
+        "APs": cocoEval.stats[3],
+        "APm": cocoEval.stats[4],
+        "APl": cocoEval.stats[5],
+        "AR1": cocoEval.stats[6],
+        "AR10": cocoEval.stats[7],
+        "AR100": cocoEval.stats[8],
+        "ARs": cocoEval.stats[9],
+        "ARm": cocoEval.stats[10],
+        "ARl": cocoEval.stats[11],
+    }
+
+
 def coco_eval(annFile, resFile, cocoGt=None):
     type = 1
     annType = ["bbox", "segm"]
@@ -33,7 +51,7 @@ def coco_eval(annFile, resFile, cocoGt=None):
     cocoEval.evaluate()
     cocoEval.accumulate()
     cocoEval.summarize()
-    return cocoEval.stats
+    return parse_coco(cocoEval)
 
 
 def boundary_eval(annFile, resFile):
@@ -52,7 +70,7 @@ def boundary_eval(annFile, resFile):
     cocoEval.evaluate()
     cocoEval.accumulate()
     cocoEval.summarize()
-    return cocoEval.stats
+    return parse_coco(cocoEval)
 
 
 def polis_eval(annFile, resFile, gt_coco=None):
