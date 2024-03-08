@@ -95,6 +95,8 @@ class BuildingDetector(nn.Module):
 
         self.train_step = 0
 
+        self.use_remask = cfg.MODEL.REMASK
+
     def forward(self, images, annotations=None):
         if self.training:
             return self.forward_train(images, annotations=annotations)
@@ -138,7 +140,7 @@ class BuildingDetector(nn.Module):
         for b in range(remask_pred.size(0)):
 
             pred_mask = remask_pred[b][0].cpu().numpy()
-            if self.cfg.MODEL.REMASK:
+            if self.use_remask:
                 # Replace the remask_pred with mask_pred to test the model without the remasking module
                 pred_mask = mask_pred[b][0].cpu().numpy()
 
