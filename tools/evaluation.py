@@ -28,6 +28,16 @@ def parse_coco(cocoEval):
     }
 
 
+def verify_index(cocoGt, resFile):
+    try:
+        cocoDt = cocoGt.loadRes(resFile)
+    except IndexError as e:
+        print("No detection result found")
+        return []
+
+    return cocoDt
+
+
 def coco_eval(annFile, resFile, cocoGt=None):
     type = 1
     annType = ["bbox", "segm"]
@@ -36,10 +46,9 @@ def coco_eval(annFile, resFile, cocoGt=None):
     if not cocoGt:
         cocoGt = COCO(annFile)
 
-    try:
-        cocoDt = cocoGt.loadRes(resFile)
-    except IndexError as e:
-        print("No detection result found")
+    cocoDt = verify_index(cocoGt, resFile)
+
+    if not cocoDt:
         return []
 
     imgIds = cocoGt.getImgIds()
@@ -58,10 +67,9 @@ def boundary_eval(annFile, resFile):
     dilation_ratio = 0.02  # default settings 0.02
     cocoGt = BCOCO(annFile, get_boundary=True, dilation_ratio=dilation_ratio)
 
-    try:
-        cocoDt = cocoGt.loadRes(resFile)
-    except IndexError as e:
-        print("No detection result found")
+    cocoDt = verify_index(cocoGt, resFile)
+
+    if not cocoDt:
         return []
 
     cocoEval = BCOCOeval(
@@ -76,18 +84,30 @@ def boundary_eval(annFile, resFile):
 def polis_eval(annFile, resFile, gt_coco=None):
     if not gt_coco:
         gt_coco = COCO(annFile)
-    dt_coco = gt_coco.loadRes(resFile)
+
+    dt_coco = verify_index(gt_coco, resFile)
+
+    if not dt_coco:
+        return []
+
     polisEval = PolisEval(gt_coco, dt_coco)
     return polisEval.evaluate()
 
 
-def max_angle_error_eval(annFile, resFile):
-    gt_coco = COCO(annFile)
-    dt_coco = gt_coco.loadRes(resFile)
+def max_angle_error_eval(annFile, resFile, gt_coco=None):
+    if not gt_coco:
+        gt_coco = COCO(annFile)
+
+    dt_coco = verify_index(gt_coco, resFile)
+
+    if not dt_coco:
+        return []
+
     contour_eval = ContourEval(gt_coco, dt_coco)
     pool = Pool(processes=20)
-    max_angle_diffs = contour_eval.evaluate(pool=pool)
-    print("Mean max tangent angle error(MTA): ", max_angle_diffs.mean())
+    max_angle_diffs = contour_eval.evaluate(pool=pool).mean()
+    print("Mean max tangent angle error(MTA): ", max_angle_diffs)
+    return max_angle_diffs
 
 
 if __name__ == "__main__":

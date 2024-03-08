@@ -23,7 +23,7 @@ from hisup.dataset.build import build_transform
 from hisup.utils.comm import to_single_device
 from hisup.utils.polygon import generate_polygon, juncs_in_bbox
 from hisup.utils.visualizer import viz_inria
-from tools.evaluation import boundary_eval, coco_eval, polis_eval
+from tools.evaluation import boundary_eval, coco_eval, polis_eval, max_angle_error_eval, compute_IoU_cIoU
 
 
 def poly_to_bbox(poly):
@@ -201,7 +201,9 @@ class TestPipeline:
         cocoGt = COCO(gt_file)
         coco_res = coco_eval(gt_file, dt_file, cocoGt)
         boundary_res = boundary_eval(gt_file, dt_file)
-        # polis_res = polis_eval(gt_file, dt_file, cocoGt)
+        polis_res = polis_eval(gt_file, dt_file, cocoGt)
+        max_angle_error = max_angle_error_eval(gt_file, dt_file, cocoGt)
+        ciou = compute_IoU_cIoU(gt_file, dt_file)
 
         dt_file = osp.join(self.output_dir, "{}_mask.json".format(dataset_name))
         logger.info(
@@ -212,28 +214,30 @@ class TestPipeline:
         with open(dt_file, "w") as _out:
             json.dump(mask_results, _out)
 
-        # eval_mask_result = self.eval(prepend="mask_")
-
         mask_coco_res = coco_eval(gt_file, dt_file, cocoGt)
         mask_boundary_res = boundary_eval(gt_file, dt_file)
-        # mask_polis_res = polis_eval(gt_file, dt_file, cocoGt)
+        mask_polis_res = polis_eval(gt_file, dt_file, cocoGt)
+        mask_max_angle_error = max_angle_error_eval(gt_file, dt_file, cocoGt)
+        mask_ciou = compute_IoU_cIoU(gt_file, dt_file)
 
         print("Publishing results to wandb...")
         self.wandb_logger(
             {
-                "train": {
-                    "epoch": self.epoch,
-                    "eval": {
-                        "coco_res": coco_res,
-                        "boundary_res": boundary_res,
-                        # "polis_res": polis_res,
-                    },
-                    "mask_eval": {
-                        "coco_res": mask_coco_res,
-                        "boundary_res": mask_boundary_res,
-                        # "polis_res": mask_polis_res,
-                    },
-                }
+                "epoch": self.epoch,
+                "eval": {
+                    "coco_res": coco_res,
+                    "boundary_res": boundary_res,
+                    "polis_res": polis_res,
+                    "max_angle_error": max_angle_error,
+                    "ciou": ciou,
+                },
+                "mask_eval": {
+                    "coco_res": mask_coco_res,
+                    "boundary_res": mask_boundary_res,
+                    "polis_res": mask_polis_res,
+                    "max_angle_error": mask_max_angle_error,
+                    "ciou": mask_ciou,
+                },
             }
         )
 
