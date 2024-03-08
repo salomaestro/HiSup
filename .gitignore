@@ -21,3 +21,6 @@ pickled_annotations.pkl
 scripts/prediction_cluster.py
 scripts/prediction_cluster_plot.py
 config-test.py
+
+terraoutputs/
+dataset2018
