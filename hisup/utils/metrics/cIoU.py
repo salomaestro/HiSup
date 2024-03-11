@@ -14,6 +14,7 @@ import numpy as np
 import json
 import argparse
 from tqdm import tqdm
+from copy import deepcopy
 
 def calc_IoU(a, b):
     i = np.logical_and(a, b)
@@ -29,17 +30,32 @@ def calc_IoU(a, b):
     else:
         return iou
 
-def compute_IoU_cIoU(input_json, gti_annotations):
+class cIoUEval:
+
+    def __init__(self, coco_gti, cocodt, logger=print):
+        self.coco_gti = coco_gti
+        self.coco = deepcopy(coco_gti)
+        self.cocodt = cocodt
+        self.logger = logger
+        self.imgIds = coco_gti.getImgIds(catIds=coco_gti.getCatIds())
+
+    def evaluate(self):
+        return compute_IoU_cIoU(None, None, self.imgIds, self.logger, self.coco_gti, self.coco)
+
+def compute_IoU_cIoU(input_json, gti_annotations, image_ids=None, logger=print, coco_gti=None, coco=None):
     # Ground truth annotations
-    coco_gti = COCO(gti_annotations)
+    if not coco_gti:
+        coco_gti = COCO(gti_annotations)
 
     # Predictions annotations
-    submission_file = json.loads(open(input_json).read())
-    coco = COCO(gti_annotations)
-    coco = coco.loadRes(submission_file)
+    if not coco:
+        submission_file = json.loads(open(input_json).read())
+        coco = COCO(gti_annotations)
+        coco = coco.loadRes(submission_file)
 
 
-    image_ids = coco.getImgIds(catIds=coco.getCatIds())
+    if not image_ids:
+        image_ids = coco.getImgIds(catIds=coco.getCatIds())
     bar = tqdm(image_ids)
 
     list_iou = []
@@ -92,9 +108,13 @@ def compute_IoU_cIoU(input_json, gti_annotations):
         bar.set_description("iou: %2.4f, c-iou: %2.4f, ps:%2.4f" % (np.mean(list_iou), np.mean(list_ciou), np.mean(pss)))
         bar.refresh()
 
-    print("Done!")
-    print("Mean IoU: ", np.mean(list_iou))
-    print("Mean C-IoU: ", np.mean(list_ciou))
+    mean_iou = np.mean(list_iou)
+    mean_ciou = np.mean(list_ciou)
+    logger("Done!")
+    logger(f"Mean IoU: {mean_iou}")
+    logger(f"Mean C-IoU: {mean_ciou}")
+
+    return mean_iou, mean_ciou
 
 
 
