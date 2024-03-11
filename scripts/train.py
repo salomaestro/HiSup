@@ -156,9 +156,6 @@ def train(cfg):
             optimizer.step()
             global_iteration += 1
 
-            if cfg.SOLVER.LR_SCHEDULER == "CyclicLR":
-                scheduler.step()
-
             batch_time = time.time() - end
             end = time.time()
             meters.update(time=batch_time, data=data_time)
@@ -203,8 +200,7 @@ def train(cfg):
 
         checkpointer.save("model_{:05d}".format(epoch))
 
-        if cfg.SOLVER.LR_SCHEDULER != "CyclicLR":
-            scheduler.step()
+        scheduler.step()
 
     total_training_time = time.time() - start_training_time
     total_time_str = str(datetime.timedelta(seconds=total_training_time))
