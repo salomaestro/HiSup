@@ -118,9 +118,9 @@ def compute_polygon_contour_measures(pred_polygons: list, gt_polygons: list, sam
     gt_polygons = shapely.geometry.collection.GeometryCollection(gt_polygons)
     pred_polygons = shapely.geometry.collection.GeometryCollection(pred_polygons)
     # Filter pred_polygons to have at least a precision with gt_polygons of min_precision
-    filtered_pred_polygons = [pred_polygon for pred_polygon in pred_polygons if min_precision < pred_polygon.intersection(gt_polygons).area / pred_polygon.area]
+    filtered_pred_polygons = [pred_polygon for pred_polygon in pred_polygons.geoms if min_precision < pred_polygon.intersection(gt_polygons).area / pred_polygon.area]
     # Extract contours of gt polygons
-    gt_contours = shapely.geometry.collection.GeometryCollection([contour for polygon in gt_polygons for contour in [polygon.exterior, *polygon.interiors]])
+    gt_contours = shapely.geometry.collection.GeometryCollection([contour for polygon in gt_polygons.geoms for contour in [polygon.exterior, *polygon.interiors]])
     # Measure metric for each pred polygon
     if progressbar:
         process_id = int(multiprocess.current_process().name[-1])
@@ -139,7 +139,7 @@ def fix_polygons(polygons, buffer=0.0):
     polygons_geom = polygons_geom.buffer(buffer)  # Fix self-intersecting polygons and other things
     fixed_polygons = []
     if polygons_geom.geom_type == "MultiPolygon":
-        for poly in polygons_geom:
+        for poly in list(polygons_geom.geoms):
             fixed_polygons.append(poly)
     elif polygons_geom.geom_type == "Polygon":
         fixed_polygons.append(polygons_geom)
@@ -153,7 +153,7 @@ def compute_contour_measure(pred_polygon, gt_contours, sampling_spacing, max_str
     # Project sampled contour points to ground truth contours
     projected_pred_contours = project_onto_geometry(sampled_pred_contours, gt_contours)
     contour_measures = []
-    for contour, proj_contour in zip(sampled_pred_contours, projected_pred_contours):
+    for contour, proj_contour in zip(sampled_pred_contours.geoms, projected_pred_contours.geoms):
         coords = np.array(contour.coords[:])
         proj_coords = np.array(proj_contour.coords[:])
         edges = coords[1:] - coords[:-1]
@@ -205,7 +205,7 @@ def sample_geometry(geom, density):
     if isinstance(geom, shapely.geometry.GeometryCollection):
         # tic = time.time()
 
-        sampled_geom = shapely.geometry.GeometryCollection([sample_geometry(g, density) for g in geom])
+        sampled_geom = shapely.geometry.GeometryCollection([sample_geometry(g, density) for g in geom.geoms])
 
         # toc = time.time()
         # print(f"sample_geometry: {toc - tic}s")
@@ -250,7 +250,7 @@ def project_onto_geometry(geom, target, pool: Pool=None):
         # tic = time.time()
 
         if pool is None:
-            projected_geom = [project_onto_geometry(g, target, pool=pool) for g in geom]
+            projected_geom = [project_onto_geometry(g, target, pool=pool) for g in geom.geoms]
         else:
             partial_project_onto_geometry = partial(project_onto_geometry, target=target)
             projected_geom = pool.map(partial_project_onto_geometry, geom)
