@@ -32,18 +32,6 @@ class DatasetCatalog(object):
             "img_dir": "coco-Aerial/val/images",
             "ann_file": "coco-Aerial/val/annotation.json",
         },
-        "terratec_train_tiny": {
-            "img_dir": "terratec/subset-32-1-514-127-20_39o/train/images",
-            "ann_file": "terratec/subset-32-1-514-127-20_39o/train/annotation.json",
-        },
-        "terratec_test_tiny": {
-            "img_dir": "terratec/subset-32-1-514-127-20_39o/test/images",
-            "ann_file": "terratec/subset-32-1-514-127-20_39o/test/annotation.json",
-        },
-        "terratec_val_tiny": {
-            "img_dir": "terratec/subset-32-1-514-127-20_39o/val/images",
-            "ann_file": "terratec/subset-32-1-514-127-20_39o/val/annotation.json",
-        },
         "terratec_train_small": {
             "img_dir": "terratec/dataset2018/train/images",
             "ann_file": "terratec/dataset2018/train/annotation-small.json",
