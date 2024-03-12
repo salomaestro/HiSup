@@ -1,12 +1,16 @@
 SOLVER:
-  IMS_PER_BATCH: 4
-  BASE_LR: 1e-4
-  MAX_EPOCH: 30
-  STEPS: (25,)
+  IMS_PER_BATCH: 10
+  # BASE_LR: 1e-2
+  BASE_LR: 1e-5
+  MAX_EPOCH: 100
+  STEPS: (5, 25, 50, 75)
   WEIGHT_DECAY: 0.0001
-  CHECKPOINT_PERIOD: 1
+  CHECKPOINT_PERIOD: 10
   OPTIMIZER: "ADAM"
   AMSGRAD: True
+  LR_SCHEDULER: "CyclicLR"
+  CYCLIC_MAX_LR: 1e-2
+  CYCLIC_STEP_SIZE_UP: 10
 
 DATALOADER:
   NUM_WORKERS: 8
@@ -24,8 +28,9 @@ DATASETS:
   ORIGIN:
     HEIGHT: 512
     WIDTH: 512
-  TRAIN: ("terratec_train_small_2018",)
-  TEST: ("terratec_val_small_2018",)
+  TRAIN: ("terratec_train_small",)
+  TEST: ("terratec_test_small",)
+  VAL: ("terratec_val_small",)
 
 MODEL:
   NAME: "HRNet48v2"
@@ -37,5 +42,8 @@ MODEL:
     loss_mask: 1.0
     loss_afm: 0.1
     loss_remask: 1.0
+  REMASK: False
 
-OUTPUT_DIR: "./outputs/terratec-small_hrnet48-2018"
+# OUTPUT_DIR: "./outputs/terratec-small_hrnet48"
+# OUTPUT_DIR: "./outputs/terratec-small_hrnet48-skip_afm"
+OUTPUT_DIR: "./outputs/terratec-small_hrnet48-cyclic-skip_afm"
