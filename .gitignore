@@ -24,3 +24,4 @@ config-test.py
 
 terraoutputs/
 dataset2018
+mounts/
