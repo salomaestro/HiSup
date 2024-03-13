@@ -39,9 +39,7 @@ def show_polygons(image, polys):
         plt.fill(polygon[:, 0], polygon[:, 1], color=color, alpha=0.3)
         plt.plot(polygon[:, 0], polygon[:, 1], color=color, marker='.')
 
-    plt.savefig("/storage/experiments/hisup/output.png")
-    plt.clf()
-    # plt.show()
+    plt.show()
 
 
 def save_viz(image, polys, save_path, filename):
