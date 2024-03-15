@@ -2,6 +2,7 @@ import cv2
 import torch
 import numpy as np
 import torch.nn.functional as F
+from matplotlib import pyplot as plt
 
 from scipy.spatial.distance import cdist
 
@@ -109,6 +110,10 @@ def inn_c_to_poly_coco(inn_c, im_h, im_w):
     return new_poly
 
 def simple_polygon(poly, thres=10):
+    """Simplifies the polygon by removing vertices with adjacent angles less
+    than a threshold.
+    """
+
     if (poly[0] == poly[-1]).all():
         poly = poly[:-1]
     lines = np.concatenate((poly, np.roll(poly, -1, axis=0)), axis=1)
@@ -158,7 +163,7 @@ def get_poly_crowdai(prop, mask_pred, junctions):
             if len(junctions) > 0:
                 cj_match_ = np.argmin(cdist(c, junctions), axis=1)
                 cj_dis = cdist(c, junctions)[np.arange(len(cj_match_)), cj_match_]
-                u, ind = np.unique(cj_match_[cj_dis < 5], return_index=True)
+                u, ind = np.unique(cj_match_[cj_dis < 10], return_index=True)
                 if len(u) > 2:
                     ppoly = junctions[u[np.argsort(ind)]]
                     ppoly = np.concatenate((ppoly, ppoly[0].reshape(-1, 2)))
