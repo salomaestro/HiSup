@@ -83,13 +83,12 @@ def generate_coco_mask(mask, img_id, catid=100):
 
 
 class TestPipeline:
-    def __init__(self, cfg, eval_type="coco_iou", wandb_logger=None, epoch=None):
+    def __init__(self, cfg, eval_type="coco_iou", epoch=None):
         self.cfg = cfg
         self.device = cfg.MODEL.DEVICE
         self.output_dir = cfg.OUTPUT_DIR
         self.dataset_name = cfg.DATASETS.TEST[0]
         self.eval_type = eval_type
-        self.wandb_logger = wandb_logger
         self.epoch = epoch
 
         if epoch is not None:
@@ -214,25 +213,9 @@ class TestPipeline:
         mask_coco_res = coco_eval(gt_file, dt_file, cocoGt)
         mask_boundary_res = boundary_eval(gt_file, dt_file)
 
-        print("Publishing results to wandb...")
-        self.wandb_logger(
-            {
-                "epoch": self.epoch,
-                "eval": {
-                    "coco_res": coco_res,
-                    "boundary_res": boundary_res,
-                },
-                "mask_eval": {
-                    "coco_res": mask_coco_res,
-                    "boundary_res": mask_boundary_res,
-                },
-            }
-        )
-
         with open(osp.join(self.output_dir, "internal_results.pkl"), "wb") as f:
             pickle.dump(internal_results, f)
 
-        print("Results published to wandb.")
 
     def test_on_crowdai(self, model, dataset_name):
         logger = logging.getLogger("testing")
@@ -272,31 +255,6 @@ class TestPipeline:
                     mask_results.extend(image_masks)
 
             scores_result.extend(batch_scores)
-
-            if self.wandb_logger:
-                self.wandb_logger(
-                    {
-                        "test": {
-                            "epoch": self.epoch,
-                            "batch_score_mean": np.mean(
-                                [s for img_scores in batch_scores for s in img_scores]
-                            ),
-                            "iter": i,
-                            "image_count": len(results),
-                        }
-                    }
-                )
-
-        if self.wandb_logger:
-            self.wandb_logger(
-                {
-                    "test": {
-                        "epoch": self.epoch,
-                        "score_mean": np.mean(scores_result),
-                        "score_median": np.median(scores_result),
-                    }
-                }
-            )
 
         dt_file = osp.join(self.output_dir, "{}.json".format(dataset_name))
         logger.info(

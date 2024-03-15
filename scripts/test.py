@@ -4,8 +4,6 @@ import os
 import sys
 from pathlib import Path
 
-import wandb
-
 sys.path.append("/storage/experiments/hisup")
 
 import torch
@@ -50,18 +48,17 @@ def parse_args():
 
     full_eval_parser = subparser.add_parser("epochs")
     full_eval_parser.add_argument(
-        "-f",
-        "--files",
+        "epochs",
         type=Path,
         help="path to .pth files of model at different epochs",
         nargs="+",
     )
-    full_eval_parser.add_argument(
-        "-a",
-        "--all",
-        help="evaluate all models in the output directory",
-        action="store_true",
-    )
+    # full_eval_parser.add_argument(
+    #     "-a",
+    #     "--all",
+    #     help="evaluate all models in the output directory",
+    #     action="store_true",
+    # )
 
     args = parser.parse_args()
 
@@ -90,7 +87,7 @@ def test(cfg, args, epoch_file=None, epoch=None):
 
         model = model.eval()
 
-    test_pipeline = TestPipeline(cfg, args.eval_type, wandb.log, epoch)
+    test_pipeline = TestPipeline(cfg, args.eval_type, epoch)
     test_pipeline.test(model)
 
 
@@ -113,19 +110,11 @@ if __name__ == "__main__":
     else:
         logger.info("Loaded the default configuration for testing")
 
-    wandb.init(
-        project="terratec-overtrain",  # might need to change this
-        config={
-            "model": cfg.MODEL.NAME,
-            "dataset": cfg.DATASETS.TEST[0],
-        },
-    )
-
     if args.command == "epochs":
-        if args.all:
+        if len(args.epochs) == 1 and args.epochs[0].is_dir():
             files = sorted(Path(cfg.OUTPUT_DIR).glob("*.pth"))
         else:
-            files = sorted(args.files)
+            files = sorted(args.epochs)
 
         logger.info(
             "Testing models at epochs: {}".format(
@@ -137,8 +126,6 @@ if __name__ == "__main__":
             # Get the epoch number from the filename
             current_epoch = int(epoch_file.stem.replace("model_", ""))
             logger.info("Testing model at epoch {}".format(current_epoch))
-
-            wandb.log({"test": {"epoch": current_epoch}})
 
             test(cfg, args, epoch_file.absolute(), current_epoch)
 
