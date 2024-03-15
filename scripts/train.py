@@ -198,7 +198,8 @@ def train(cfg):
                     }
                 )
 
-        checkpointer.save("model_{:05d}".format(epoch))
+        if epoch % cfg.SOLVER.CHECKPOINT_PERIOD:
+            checkpointer.save("model_{:05d}".format(epoch))
 
         scheduler.step()
 
