@@ -11,22 +11,8 @@ from hisup.utils.metrics.cIoU import compute_IoU_cIoU
 from hisup.utils.metrics.polis import PolisEval
 
 
-def parse_coco(cocoEval):
-    return {
-        "AP": cocoEval.stats[0],
-        "AP50": cocoEval.stats[1],
-        "AP75": cocoEval.stats[2],
-        "APs": cocoEval.stats[3],
-        "APm": cocoEval.stats[4],
-        "APl": cocoEval.stats[5],
-        "AR1": cocoEval.stats[6],
-        "AR10": cocoEval.stats[7],
-        "AR100": cocoEval.stats[8],
-        "ARs": cocoEval.stats[9],
-        "ARm": cocoEval.stats[10],
-        "ARl": cocoEval.stats[11],
-    }
-
+# def parse_coco(cocoEval):
+#     return pd.DataFrame(data=cocoEval.stats, index=["AP", "AP50", "AP75", "APs", "APm", "APl", "AR1", "AR10", "AR100", "ARs", "ARm", "ARl"]).to_markdown()
 
 def verify_index(cocoGt, resFile):
     try:
@@ -63,7 +49,7 @@ def coco_eval(annFile, resFile, cocoGt=None):
     cocoEval.evaluate()
     cocoEval.accumulate()
     cocoEval.summarize()
-    return parse_coco(cocoEval)
+    return cocoEval.stats
 
 
 def boundary_eval(annFile, resFile):
@@ -81,7 +67,7 @@ def boundary_eval(annFile, resFile):
     cocoEval.evaluate()
     cocoEval.accumulate()
     cocoEval.summarize()
-    return parse_coco(cocoEval)
+    return cocoEval.stats
 
 
 def polis_eval(annFile, resFile, gt_coco=None):
@@ -112,33 +98,43 @@ def max_angle_error_eval(annFile, resFile, gt_coco=None):
     print("Mean max tangent angle error(MTA): ", max_angle_diffs)
     return max_angle_diffs
 
+def fmt_pct(num):
+    return f"{num*100:.1f}"
+
+def fmt(num):
+    return f"{num:.3f}"
 
 if __name__ == "__main__":
+    import pandas as pd
     parser = argparse.ArgumentParser()
     parser.add_argument("--gt-file", default="")
     parser.add_argument("--dt-file", default="")
     parser.add_argument(
         "--eval-type",
-        default="coco_iou",
+        default=["coco_iou", "boundary_iou", "polis", "angle", "ciou"],
         choices=["coco_iou", "boundary_iou", "polis", "angle", "ciou"],
+        nargs="+",
     )
     args = parser.parse_args()
 
     eval_type = args.eval_type
     gt_file = args.gt_file
     dt_file = args.dt_file
-    if eval_type == "coco_iou":
-        coco_eval(gt_file, dt_file)
-    elif eval_type == "boundary_iou":
-        boundary_eval(gt_file, dt_file)
-    elif eval_type == "polis":
-        polis_eval(gt_file, dt_file)
-    elif eval_type == "angle":
-        max_angle_error_eval(gt_file, dt_file)
-    elif eval_type == "ciou":
-        compute_IoU_cIoU(dt_file, gt_file)
-    else:
-        raise RuntimeError(
-            'please choose a correct type from \
-                            ["coco_iou", "boundary_iou", "polis", "angle", "ciou"]'
-        )
+    results = dict()
+    if "coco_iou" in eval_type:
+        res = coco_eval(gt_file, dt_file)
+        results["AP"] = fmt_pct(res[0])
+        results["AR$_{100}$"] = fmt_pct(res[8])
+    if "boundary_iou" in eval_type:
+        res = boundary_eval(gt_file, dt_file)
+        results["AP$^{boundary}$"] = fmt_pct(res[0])
+    if "polis" in eval_type:
+        results["PoLiS"] = fmt(polis_eval(gt_file, dt_file))
+    if "angle" in eval_type:
+        results["MTA"] = fmt(max_angle_error_eval(gt_file, dt_file))
+    if "ciou" in eval_type:
+        res = compute_IoU_cIoU(dt_file, gt_file)
+        results["IoU"] = fmt_pct(res[0])
+        results["cIoU"] = fmt_pct(res[1])
+
+    print(pd.DataFrame(results, index=[0]).to_markdown())
