@@ -96,6 +96,7 @@ class BuildingDetector(nn.Module):
         self.train_step = 0
 
         self.use_remask = cfg.MODEL.REMASK
+        self.add_loss = cfg.MODEL.ADD_LOSS
 
     def forward(self, images, annotations=None):
         if self.training:
@@ -239,6 +240,10 @@ class BuildingDetector(nn.Module):
             loss_dict["loss_remask"] += F.cross_entropy(
                 remask_pred, targets["mask"].squeeze(dim=1).long()
             )
+            if self.add_loss:
+                loss_dict["loss_remask"] += F.cross_entropy(
+                    mask_pred, remask_pred
+                )
         extra_info = {}
 
         return loss_dict, extra_info

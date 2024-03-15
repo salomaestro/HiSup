@@ -14,3 +14,4 @@ cfg.DATALOADER.NUM_WORKERS = 8
 cfg.OUTPUT_DIR = "outputs/default"
 
 cfg.MODEL.REMASK = True
+cfg.MODEL.ADD_LOSS = False
