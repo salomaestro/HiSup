@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 from pathlib import Path
+import cv2
 
 import numpy as np
 import torch
@@ -20,6 +21,13 @@ from hisup.utils.visualizer import show_polygons
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Testing")
+
+    parser.add_argument(
+        "--config-file",
+        default="configs/retinanet.yaml",
+        help="path to config file",
+        type=Path,
+    )
 
     parser.add_argument(
         "--model",
@@ -53,8 +61,9 @@ def test(cfg, args):
         pixels = image[:, :, i].ravel()
         img_mean.append(np.mean(pixels))
         img_std.append(np.std(pixels))
-    cfg.DATASETS.IMAGE.PIXEL_MEAN = img_mean
-    cfg.DATASETS.IMAGE.PIXEL_STD = img_std
+
+    # cfg.DATASETS.IMAGE.PIXEL_MEAN = img_mean
+    # cfg.DATASETS.IMAGE.PIXEL_STD = img_std
 
     model = BuildingDetector(cfg, test=True)
     model = model.to(device)
@@ -91,4 +100,6 @@ def test(cfg, args):
 
 if __name__ == "__main__":
     args = parse_args()
+    cfg.merge_from_file(args.config_file)
+    cfg.freeze()
     test(cfg, args)
